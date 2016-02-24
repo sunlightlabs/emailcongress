@@ -1,0 +1,23 @@
+<nav class="row footer__nav">
+    <div class="col-sm-4">
+        <div class="footer__nav-item">
+            {% include 'icon_user.svg' %}
+            <span class="link"><a href="{% url 'index' %}#returninguser">Update my reps and info</a></span>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="footer__nav-item">
+            {% include 'icon_question.svg' %}
+            <span class="link"><a href="{% url 'faq' %}">Questions? Check our FAQ</a></span>
+        </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="footer__nav-item">
+            {% include 'icon_lock.svg' %}
+            <span class="link"><a href="https://sunlightfoundation.com/legal/terms/">Terms</a> <span class="u-text-green">&amp;</span> <a href="https://sunlightfoundation.com/legal/privacy/">Privacy Policy</a></span>
+        </div>
+    </div>
+</nav>
+<div class="row">
+    <div class="footer__disclaimer">This service is offered by the <a class="link-alt" href="https://sunlightfoundation.com">Sunlight Foundation</a> and is not affiliated with Congress.</div>
+</div>

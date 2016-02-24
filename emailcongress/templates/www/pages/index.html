@@ -1,0 +1,102 @@
+{% extends 'www/base.html' %}{% load staticfiles %}{% load pipeline %}
+
+{% block main %}
+    <main>
+        <section class="hero">
+            <div class="branding-bar" data-bb-brandingbar="true" data-bb-property-id="sunlightlabs-awesome"></div>
+            <div class="hero__content">
+                <h1>{% include 'emailcongress-logo.svg' %}</h1>
+                <h2 class="hero__description">Contacting Congress is now as easy as email.</h2>
+                <a class="hero__button" href="{% url 'address_input_view' %}">Get Started</a>
+            </div>
+            <video autoplay="true" class="hero__video visible-md visible-lg" loop="loop">
+                <source src="{% static 'images/flag-background.ogg' %}" type="video/ogg">
+                <source src="{% static 'images/flag-background.mp4' %}" type="video/mp4">
+            </video>
+        </section>
+
+        <section class="section u-bg-light" id="returninguser">
+            <div class="content_wrapper">
+                {% include 'icon_user.svg' %}
+                <h2 class="section__heading--large">Returning to Email Congress?</h2>
+                <div class="row">
+                    <div class="col-sm-6">
+                        <button id="update_address" class="button__secondary" data-js="toggle-email-form">I moved&mdash;update my information</button>
+                    </div>
+                    <div class="col-sm-6">
+                        <button id="remind_reps" class="button__secondary" data-js="toggle-email-form">Remind me who my reps are</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section email-form-wrapper u-bg-dark" style="display: none;">
+            <div class="content_wrapper">
+
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="content_wrapper">
+                <h2 class="section__heading--large">How does it work?</h2>
+
+                <div class="row steps-group">
+                    <div class="col-xs-3">
+                        <img class="illustration" src="{% static 'images/illustration_form-75x90.png' %}" height="90" width="75">
+                    </div>
+                    <div class="col-xs-9">
+                        <div class="prose">
+                            <p>
+                                <strong>Find your reps</strong>
+                                <br>
+                                We match you with your representatives when you sign up and provide your address.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row steps-group">
+                    <div class="col-xs-3">
+                        <img class="illustration" src="{% static 'images/illustration_flag-75x90.png' %}" height="90" width="75">
+                    </div>
+                    <div class="col-xs-9">
+                        <div class="prose">
+                            <p>
+                                <strong>Write to Congress</strong>
+                                <br>
+                                Once we’ve found your reps, you can send them a message directly through your email.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row steps-group">
+                    <div class="col-xs-3">
+                        <img class="illustration" src="{% static 'images/illustration_congress-75x90.png' %}" height="90" width="75">
+                    </div>
+                    <div class="col-xs-9">
+                        <div class="prose">
+                            <p>
+                                <strong>Whoosh!</strong>
+                                <br>
+                                We deliver your message to your reps using technology that navigates their complicated webforms.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section u-bg-light">
+            <div class="content_wrapper">
+                {% include 'machine.svg' %}
+                <h2 class="section__heading--large">Why we made this</h2>
+                <div class="prose">
+                    <p>It’s not easy to get in touch with members of Congress. You have to navigate different, complicated web forms each time you want to send a message to your representatives.</p>
+                    <p>Now, with Email Congress you can use your own email to write to your reps. After you sign up, our technology does all the work, so all you have to do is send an email!</p>
+                    <p>Remember we're not Congress, we just help you communicate with your representatives.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+{% endblock %}

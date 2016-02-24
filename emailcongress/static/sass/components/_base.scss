@@ -1,0 +1,112 @@
+//  Utility Classes
+
+.is-hidden { display: none; }
+
+.u-bg-light { background: #fff; }
+.u-bg-dark { background: #333; }
+
+
+// Layout
+
+html {
+    height: 100%;
+}
+
+body {
+    background: $background;
+    min-height: 100%;
+}
+
+
+// Main container
+
+.main {
+    @extend .container;
+    max-width: 600px;
+    padding: 0;
+}
+
+// Section container
+
+.section {
+    padding: 50px 25px;
+    text-align: center;
+    
+    @include breakpoint($screen-md){
+        padding: 50px 75px;
+    }
+
+    &__heading {
+        @extend %alpha;
+        font-weight: bold;
+        margin: 0;
+        margin-top: 10px;
+    }
+
+    &__heading--large {
+        font-size: 24px;
+        font-weight: 600;
+        margin: 25px 0 50px;
+    }
+
+    &__description {
+        @extend %alpha;
+        margin: 0;
+        margin-top: 20px;
+
+        .email-form-wrapper & {
+            margin-bottom: 25px;
+        }
+    }
+
+    .icon {
+        height: 36px;
+        width: 36px;
+
+        path {
+            fill: $green;
+        }
+    }
+}
+
+// Content container
+
+.content_wrapper {
+    margin: auto;
+    max-width: 50em;
+}
+
+.content {
+    background: $white;
+    margin: 0 auto;
+    padding: 75px 25px;
+    position: relative;
+    transition: padding 200ms;
+    width: 100%;
+    
+    @include breakpoint($screen-sm){
+        padding: 75px 50px;
+    }
+
+    &:before {
+        @include triangle(16px, $background);
+        content: ''; 
+        position: absolute;
+        top: 0;
+        left: 48%;
+        left: calc(50% - 16px);
+    }
+
+    &__header {
+        @extend %beta;
+        margin: 0;
+        margin-bottom: 25px;
+        line-height: 1.25em;
+    }
+
+    &__notes {
+        border-top: 1px dashed $gray-light;
+        margin-top: 75px;
+        padding-top: 50px;
+    }
+}

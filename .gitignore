@@ -1,0 +1,9 @@
+etc/config.yaml
+*.pyc
+staticfiles
+*.sqlite3
+.sass-cache
+.DS_Store
+.idea/
+.env
+.vagrant

@@ -1,0 +1,30 @@
+---
+- name: Set up emailcongress.us
+  hosts: emailcongress-site
+  user: ubuntu
+  become: yes
+  become_method: sudo
+  vars:
+    configure_user: yes
+  roles:
+    - role: common-roles/common
+      hostname: emailcongress.org
+      extra_packages:
+        - libpq-dev # Need this for psycopg2
+    - role: common-roles/node
+      npm_packages:
+        - yuglify
+        - uglify-js
+    - role: common-roles/ruby
+      gem_packages:
+        - sass
+    - role: common-roles/django
+      python_version: 3
+      git_repositories:
+        - repo: https://github.com/crdunwel/emailcongress.git
+          dir: emailcongress
+          version: HEAD
+      requirements: "requirements-dev.txt"
+      wsgi_module: emailcongress.wsgi:application
+      serve_static: yes
+    - role: roles/emailcongress

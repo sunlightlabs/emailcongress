@@ -1,0 +1,129 @@
+//  Type utility classes
+
+%alpha { font-size: $alpha; }
+%beta { font-size: $beta; }
+%gamma { font-size: $gamma; }
+%micro { font-size: $micro; }
+
+.semibold { font-weight: 600; }
+
+.u-text-light { color: #fff; }
+.u-text-green { color: $green; }
+
+
+// Default body type
+
+body {
+    color: $gray-dark;
+    font-family: $font-family-sans;
+    font-size: $gamma;
+}
+
+// Paragraphs
+
+p {
+    margin: 0 0 1em;
+}
+
+
+// Links
+
+a {
+    &:link,
+    &:visited  {
+        border-bottom: 0px solid transparent;
+        color: $green;
+        text-decoration: none;
+        transition: all 200ms;
+    }
+
+    &:hover,
+    &:active,
+    &:focus, {
+        border-bottom: 1px solid $blue;
+        color: $blue;
+        outline: none;
+        text-decoration: none;
+    }
+
+    &.link-alt {
+        border-bottom: none;
+        color: $gray;
+
+        &:hover {
+            color: $green;
+        }
+    }
+}
+
+
+// Styles for longer text
+
+.prose {
+    font-size: $alpha;
+    text-align: left;
+
+    @include breakpoint($screen-md){
+        padding-left: 50px;
+        padding-right: 50px;
+    }
+
+    p {
+        margin-top: 0;
+
+        @include breakpoint(768px){
+            margin-top: 10px;
+        }
+    }
+}
+
+
+// Illustrated explanatory text on homepage
+
+.steps-group {
+    margin-bottom: 50px;
+
+    .illustration {
+        width: 50px;
+
+        @include breakpoint($screen-sm){
+            width: 75px;
+        }
+    }
+
+    .prose {
+        padding-left: 0;
+        padding-right: 0;
+
+        @include breakpoint($screen-md){
+            padding-right: 50px;
+        }
+    }
+}
+
+
+// FAQ type styles
+
+.faq {
+
+    &__list {
+        list-style: none;
+        padding-left: 0;
+
+        li {
+            margin-bottom: 5px;
+        }
+    }
+
+    &__group {
+        margin-top: 60px;
+    }
+
+    &__header {
+        @extend %beta;
+        font-weight: 700;
+        margin: 0;
+        margin-bottom: 15px;
+    }
+
+}

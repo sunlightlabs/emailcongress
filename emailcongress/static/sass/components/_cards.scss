@@ -1,0 +1,233 @@
+// Card components
+
+
+.repcards-section {
+    @extend .clearfix;
+    margin-bottom: 50px;
+}
+
+
+// Vertical repcards
+
+.repcard {
+    border: 1px solid $gray-light;
+    cursor: pointer;
+    display: inline-block;
+    margin-bottom: 10px;
+    padding: 15px;
+    position: relative;
+    width: 100%;
+    transition: all 100ms;
+    
+    @include breakpoint($screen-md){
+        width: 160px;
+        margin-right: 10px;
+        float: left;
+    }
+
+    &:last-child {
+        margin-bottom: 0;
+
+        @include breakpoint($screen-md){
+            margin-right: 0;
+        }
+    }
+
+    .no-touch &:hover {
+        background: lighten(#eaf8f4, 3%);
+        border-color: #9fccc3;
+    }
+
+    &.is-selected {
+        background: #eaf8f4;
+        border-color: #9fccc3;
+        
+        &:hover {
+            background: #eaf8f4;
+            border-color: #9fccc3;
+        }
+        
+        .repcard__photo {
+            -webkit-filter: grayscale(0);
+            filter: grayscale(0);
+        }
+
+        .repcard__info {
+            font-weight: 600;
+        }
+    }
+
+    &__photo {
+        border-radius: 50%;
+        display: inline-block;
+        width: 60px;
+        height: 60px;
+        overflow: hidden;
+
+        -webkit-filter: grayscale(1);
+        filter: grayscale(1);
+        
+        background-color: #eee;
+        background-repeat: no-repeat;
+        background-size: cover;
+        background-position: center center;
+
+        vertical-align: middle;
+
+        @include breakpoint($screen-md){
+            display: block;
+            margin: auto;
+            margin-top: 10px;
+            width: 70px;
+            height: 70px;
+        }
+    }
+
+    &__info {
+        display: inline-block;
+        vertical-align: middle;
+        margin-left: 15px;
+        margin-right: 15px;
+        width: calc(100% - 125px);
+
+        span {
+            display: block;
+        }
+
+        @include breakpoint($screen-md){
+            display: block;
+            margin: auto;
+            margin-top: 10px;
+            width: 100%;
+            text-align: center;
+        }
+    }
+
+    &__action {
+        display: inline-block;
+        height: 100%;
+        vertical-align: middle;
+
+        @include breakpoint($screen-md){
+            display: block;
+            margin: auto;
+            margin-top: 10px;
+            width: 22px;
+        }
+    }
+
+    // Checkboxes for vertical repcards
+
+    &__checkbox {
+        cursor: pointer;
+        float: right;
+        height: 26px;
+        width: 26px;
+        opacity: 0;
+        padding: 10px;
+        position: relative;
+        z-index: 2;
+
+        &:not(:checked) {
+            
+            ~ .repcard__checkbox--add {
+                opacity: 1;
+            }
+            ~ .repcard__checkbox--check {
+                opacity: 0;
+
+                .icon {
+                    margin: 2px;
+                    height: 18px;
+                    width: 18px;
+                }
+            }
+        }
+
+        &:checked {
+
+            ~ .repcard__checkbox--add {
+                opacity: 0;
+
+                .icon {
+                    margin: 2px;
+                    height: 18px;
+                    width: 18px;
+                }
+            }
+
+            ~ .repcard__checkbox--check {
+                opacity: 1;
+            }
+        }
+
+        &--add, &--check {
+            margin-top: 5px;
+            position: absolute;
+            transition: all 200ms;
+            
+            .icon {
+                height: 22px;
+                width: 22px;
+            }
+
+        }
+
+        &--add .icon path {
+            fill: $gray-light;
+        }
+
+        &--check .icon path {
+            fill: $green;
+        }
+    }
+
+
+    // Horizontal repcards
+    
+    &--horizontal {
+        @extend .repcard;
+
+        @include breakpoint($screen-md){
+            display: inline-block;
+            margin-right: 0;
+            width: 100%;
+        }
+
+        .repcard__photo {
+            display: block;
+            margin: auto;
+
+            @include breakpoint($screen-md){
+                display: inline-block;
+                height: 60px;
+                width: 60px;
+            }
+        }
+
+        .repcard__info {
+            margin: auto;
+            margin-top: 10px;
+            text-align: center;
+            width: 100%;
+
+            @include breakpoint($screen-md){
+                display: inline-block;
+                margin-left: 15px;
+                margin-right: 15px;
+                margin-top: 5px;
+                text-align: left;
+                vertical-align: middle;
+                width: calc(100% - 125px);
+            }
+
+            span {
+                display: inline-block;
+            }
+            p {
+                margin-bottom: 0;
+                word-wrap: break-word;
+            }
+        }
+    }
+}

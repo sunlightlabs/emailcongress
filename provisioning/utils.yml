@@ -1,0 +1,57 @@
+---
+- name: Site admin
+  hosts: emailcongress-site
+  user: ubuntu
+  sudo: yes
+  tasks:
+    - name: Restart nginx
+      service: name=nginx state=restarted
+      tags:
+        - website-restart
+    - name: Restart django-application (uwsgi)
+      service: name=uwsgi state=restarted
+      tags:
+        - website-restart
+
+- name: taskqueue admin
+  hosts: emailcongress-taskqueue
+  user: ubuntu
+  sudo: yes
+  tasks:
+  - name: Restart celery
+    service: name=celery-emailcongress state=restarted
+    tags:
+      - taskqueue-restart
+
+- name: Project user niceties
+  hosts:
+    - emailcongress-site
+  user: ubuntu
+  sudo: yes
+  tasks:
+    - name: pip install ipython
+      pip: >
+        name=ipython
+        state=present
+        virtualenv=/projects/{{project_name}}/virt
+      environment: environment_vars
+      tags:
+        - ipython-virtualenv
+    - name: install django-pdb
+      pip: name=django-pdb virtualenv=/projects/{{project_name}}/virt/
+      sudo_user: "{{project_name}}"
+      tags:
+        - debug-django
+    - name: install django-debug-toolbar
+      pip: name=django-debug-toolbar virtualenv=/projects/{{project_name}}/virt/
+      sudo_user: "{{project_name}}"
+      tags:
+        - debug-django
+    - name: set DEBUG env var in uwsgi
+      lineinfile: dest=/etc/uwsgi/apps-enabled/{{project_name}}.ini state=present insertafter=EOF line="env = DEBUG=True"
+      tags:
+        - debug-django
+    - name: set DEBUG env var for user
+      lineinfile: dest=/projects/{{project_name}}/env_vars state=present insertafter=EOF line="export DEBUG=True"
+      tags:
+        - debug-django

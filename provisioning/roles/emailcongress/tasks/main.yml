@@ -1,0 +1,22 @@
+---
+- name: create error log and set permissions
+  file: path={{environment_vars.ERROR_LOG_FILE}} owner={{project_name}} group={{project_name}} mode="u=rw,g=r,o=r" state=touch
+- name: migrate django project
+  become: yes
+  become_user: emailcongress
+  django_manage: >
+    command=migrate
+    app_path=/projects/{{project_name}}/src/{{project_name}}
+    settings={{django_settings_module}}
+    virtualenv=/projects/{{project_name}}/virt
+  environment: "{{environment_vars}}"
+  tags:
+    - migrate
+- name: collect static files
+  become: yes
+  become_user: emailcongress
+  django_manage: >
+    command=collectstatic
+    app_path=/projects/{{project_name}}/src/{{project_name}}
+    virtualenv=/projects/{{project_name}}/virt
+  environment: "{{environment_vars}}"

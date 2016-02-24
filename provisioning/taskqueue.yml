@@ -1,0 +1,25 @@
+---
+- name: Set up taskqueue.emailcongress
+  hosts: emailcongress-taskqueue
+  user: ubuntu
+  become: yes
+  become_method: sudo
+  vars:
+    concurrency: 2
+    worker_nodes: 4
+    celeryd_max_tasks_per_child: 500
+  roles:
+    - role: common-roles/common
+      hostname: taskqueue.emailcongress.org
+      extra_packages:
+        - libpq-dev
+    - role: common-roles/redis-server
+      bind_external: true
+    - role: common-roles/django-celery
+      python_version: 3
+      celerybeat_enabled: no
+      git_repositories:
+          - repo: https://github.com/crdunwel/emailcongress.git
+            dir: emailcongress
+            version: HEAD
+      requirements: "requirements-dev.txt"

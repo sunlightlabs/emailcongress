@@ -1,0 +1,47 @@
+// Footer
+
+.footer {
+    @extend .container;
+    margin-top: 50px;
+
+
+    // Footer nav
+
+    &__nav {
+        border-bottom: 1px solid #ddd;
+        padding: 25px;
+    }
+    
+    &__nav-item {
+        display: table;
+        margin: auto;
+        width: 250px;
+
+        .icon {
+            display: table-cell;
+            margin: 20px;
+            height: 36px;
+            width: 36px;
+            vertical-align: middle;
+
+            path {
+                fill: #777;
+            }
+        }
+
+        .link {
+            display: table-cell;
+            width: 100%;
+            vertical-align: middle;
+        }
+    }
+
+    // Footer disclaimer
+    
+    &__disclaimer {
+        color: $gray;
+        margin-bottom: 10px;
+        text-align: center;
+        padding: 25px;
+    }
+}

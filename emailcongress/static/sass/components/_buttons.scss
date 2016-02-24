@@ -1,0 +1,81 @@
+// Buttons
+
+.button {
+    @include button-variant($white, $green, $green);
+    border: 0;
+    border-radius: 3px;
+    display: block;
+    font-size: $beta;
+    font-weight: normal;
+    margin: 16px auto;
+    padding: 14px;
+    text-align: center;
+    text-decoration: none;
+    transition: background 200ms, width 200ms;
+    width: 100%;
+
+    &:hover {
+        background: darken($green, 5%);
+    }
+
+    &:active {
+        background: $green;
+        transition: background 0ms;
+    }
+
+    &:focus {
+        outline: none;
+    }
+
+
+    // Disabled button states
+
+    &.is-disabled {
+        animation-name: shake;
+        animation-duration: 200ms;
+        animation-fill-mode: both;
+        background-color: #7dccbd;
+        transition: none;
+        
+        // Disabled button text states
+        .button__text--disabled {
+            display: block;
+        }
+
+        .button__text {
+            display: none;
+        }
+    }
+
+    .button__text--disabled {
+        display: none;
+    }
+
+
+    // Button Variants
+
+    &__primary {
+        @extend .button;
+        width: 100%;
+    }
+
+    &__secondary {
+        @extend .button;
+        background-color: $white;
+        box-shadow: inset 0 0 0 2px $green;
+        color: $green;
+        width: 100%;
+        
+        &:hover,
+        &:active,
+        &:focus {
+            background: $white;
+            color: $green;
+        }
+
+        &.is-active {
+            background: $green;
+            color: $white;
+        }
+    }
+}
