@@ -1,15 +1,18 @@
 from __future__ import absolute_import
-
+import os
 from celery import Celery
 from emailcongress import emailer
 from django.conf import settings
 
-cel = Celery('emailcongress')
+# set the default Django settings module for the 'celery' program.
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'emailcongress.settings.shared')
+
+celery = Celery('emailcongress')
 for key, val in settings.CONFIG_DICT['celery'].items():
-    setattr(cel.conf, ('celery_' + key).upper(), val)
+    setattr(celery.conf, ('celery_' + key).upper(), val)
 
 
-@cel.task(bind=True, max_retries=cel.conf.CELERY_MAX_RETRIES, default_retry_delay=cel.conf.CELERY_RETRY_DELAY)
+@celery.task(bind=True, max_retries=celery.conf.CELERY_MAX_RETRIES, default_retry_delay=celery.conf.CELERY_RETRY_DELAY)
 def send_to_phantom_of_the_capitol(self, msg_id=None, msgleg_id=None, force=False):
     """
     Attempts to send the message to various legislators and notifies the user via email

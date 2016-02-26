@@ -1,0 +1,5 @@
+---
+- name: restart rackup
+  shell: bash -lc "rvm gemset use phantom-dc --create && rackup -D --host {{proxy_ip}} --port {{proxy_port}}" chdir={{project_path}}
+  become: yes
+  become_user: "{{project_name}}"

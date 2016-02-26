@@ -1,7 +1,8 @@
 ---
 project_name: emailcongress
 django_settings_module: emailcongress.settings.local
-environment_vars:
+requirements: "requirements-dev.txt"
+django_environment:
   ERROR_LOG_FILE: /projects/emailcongress/logs/django_errors.log
   SECRET_KEY: a-bad-secret-key
   DATABASE_URL: postgres://emailcongress:test@10.73.98.101:5432/emailcongress

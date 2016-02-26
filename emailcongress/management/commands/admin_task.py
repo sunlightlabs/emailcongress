@@ -35,7 +35,7 @@ def reset_database(prompt=True):
 
 def import_data():
     print('Importing congresspeople...')
-    management.call_command('daily', task='import_congresspeople', kwargs='from_cache=True')
+    management.call_command('daily', task='import_congresspeople', kwargs=[['from_cache', 'False']])
 
 
 def create_test_data():

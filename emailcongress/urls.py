@@ -26,7 +26,8 @@ urlpatterns = [
     url(r'^faq', FaqView.as_view(), name='faq'),
     url(r'^postmark/inbound', PostmarkView.as_view(), name='postmark'),
     url(r'^signup', AddressInputView.as_view(), name='address_input_view'),
-    url(r'^admin', admin.site.urls),
+    url(r'^admin/', admin.site.urls),
+    url(r'^api/', include('api.urls', namespace='api'))
 ]
 
 if settings.DEBUG:

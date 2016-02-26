@@ -13,7 +13,7 @@ def apply_admin_filter(func):
     def check_for_admin_email(*args, **kwargs):
         pmmail = func(*args, **kwargs)
 
-        if not settings.APP_DEBUG or (settings.APP_DEBUG and args[1].email in settings.ADMIN_EMAILS):
+        if not settings.DEBUG or (settings.DEBUG and args[1].email in settings.DEBUG_EMAILS):
             print('Sending live email to ' + args[1].email)
             return pmmail
         else:

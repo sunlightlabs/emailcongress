@@ -25,4 +25,4 @@ def determine_district(**kwargs):
     try:
         return data[0]
     except:
-        return None
+        raise

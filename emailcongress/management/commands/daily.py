@@ -1,5 +1,5 @@
 import os
-import sys
+from emailcongress import utils
 import requests
 import json
 import traceback
@@ -12,9 +12,11 @@ from django.conf import settings
 
 def import_congresspeople(from_cache=False):
     """
-    Imports all the congresspeople for whom there exists a contact form.
 
+    @param from_cache:
+    @type from_cache:
     @return:
+    @rtype:
     """
     if from_cache:  # load members of congress from cache (to speed up testing/development)
         with open(os.path.join(settings.BASE_DIR, settings.CONFIG_DICT['paths']['legislator_data_cache']), mode='r') as cache:
@@ -33,7 +35,7 @@ def import_congresspeople(from_cache=False):
     # marks those for whom we don't have a contact-congress yaml as uncontactable
     Legislator.objects.exclude(bioguide_id__in=bioguide_ids).update(contactable=False)
 
-    if not from_cache:
+    if not utils.bool_eval(from_cache):
         # Create legislator entry for congresspeople for whom we don't have a database entry
         all_legislators = []
         for bgi in bioguide_ids:
@@ -42,12 +44,15 @@ def import_congresspeople(from_cache=False):
                 r = requests.get(settings.CONFIG_DICT['api_endpoints']['congress_base'] + '/legislators',
                                  params={'bioguide_id': bgi, 'apikey': settings.CONFIG_DICT['api_keys']['sunlight']})
                 data = r.json()['results'][0]
-                all_legislators.append(data)
+                data['email'] = Legislator.doctor_email(data.get('oc_email', ''))
                 for attr in Legislator.CONGRESS_API_COLUMNS:
                     setattr(leg, attr, data.get(attr, ''))
+                leg.email = data['email']
                 leg.save()
+                all_legislators.append(data)
             except:
                 print("No data from congress api for : " + bgi)
+                # TODO report
                 continue
 
         # save data to cache in case we need to load it up again
@@ -68,10 +73,9 @@ class Command(BaseCommand):
     def handle(self, **options):
         try:
             if options.get('task'):
-                task = options.pop('task')
-                if 'kwargs' in options and type(options['kwargs']) is str:
-                    options['kwargs'] = list(map(lambda kv: kv.split('='), options['kwargs'].split(" ")))
+                task = options.pop('task')[0]
                 kwargs = {item[0]: item[1] for item in options['kwargs']}
+                print(kwargs)
                 self.tasks.get(task)(**kwargs)
             else:
                 for name, method in self.tasks.items():

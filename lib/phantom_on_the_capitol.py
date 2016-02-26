@@ -28,7 +28,7 @@ class PhantomOfTheCapitol():
 
     def fill_out_form(self, json_dict):
         """
-        Attempts to fill out the congressial webform with input json data.
+        Attempts to fill out the congressional webform with input json data.
 
         @param json_dict: dictionary to be converted into a json string. Example of input schema:
                           {"bio_id": "A000000",
@@ -43,7 +43,9 @@ class PhantomOfTheCapitol():
                                 "$NAME_PREFIX": "Grand Moff"
                                 }
                           }
-        @return: json
+        @type json_dict: dict
+        @return: dictionary of success or failure
+        @rtype: dict
         """
         try:
             r = requests.post(self.endpoint + '/fill-out-form',
@@ -53,4 +55,5 @@ class PhantomOfTheCapitol():
             return r.json()
         except:
             print('Failed to execute API call to phantom of the capitol.')
+            # TODO log errors
             return None

@@ -1,0 +1,37 @@
+---
+- name: install base packages
+  apt: pkg={{item}} update_cache=yes
+  with_items:
+    - git
+    - imagemagick
+    - libmysql++-dev
+    - libpq-dev
+    - libqt4-dev
+    - xvfb
+    - phantomjs
+  become: yes
+  become_user: root
+- name: checkout project directory
+  git: repo={{item.repo}} dest=/projects/{{project_name}}/src/{{item.dir}} version={{item.version|default('HEAD')}} force={{force_git_checkout|default(no)}}
+  with_items:
+    - repo: https://github.com/EFForg/phantom-of-the-capitol.git
+      dir: phantom-of-the-capitol
+      version: HEAD
+- name: write config template
+  template: src=phantom-dc_config.j2 dest={{project_path}}/config/phantom-dc_config.rb mode=755 owner={{project_name}} group={{project_name}}
+- name: write database config template
+  template: src=database.j2 dest={{project_path}}/config/database.rb mode=755 owner={{project_name}} group={{project_name}}
+- name: setup schema and load data
+  become: yes
+  become_user: "{{project_name}}"
+  shell: bash -lc "rvm gemset use phantom-dc --create && printf "\r" | RACK_ENV={{rack_env}} {{item}}" chdir={{project_path}}
+  with_items:
+    - bundle install
+    - bundle exec rake db:migrate
+    - bundle exec rake ar:create
+    - bundle exec rake ar:schema:load
+    - ./phantom-dc datasource add --git-clone https://github.com/unitedstates/contact-congress.git us_congress ./us_congress members/
+    - bundle exec rake phantom-dc:update_git
+  notify:
+    - restart rackup
+  ignore_errors: yes

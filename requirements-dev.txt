@@ -23,3 +23,8 @@ eventlet
 redis
 Celery
 dj-database-url
+djangorestframework
+markdown
+django-filter
+python-memcached
+ansible

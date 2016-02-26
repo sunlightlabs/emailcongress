@@ -42,9 +42,20 @@ INSTALLED_APPS = [
     'django_extensions',
     'storages',
     'pipeline',
+    'rest_framework',
 
     'emailcongress',
+    'api',
 ]
+
+SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+        'LOCATION': '127.0.0.1:11211',
+    }
+}
 
 MIDDLEWARE_CLASSES = [
     'django.middleware.security.SecurityMiddleware',
@@ -134,7 +145,7 @@ LOGGING = {
         'file': {
             'level': 'ERROR',
             'class': 'logging.FileHandler',
-            'filename': os.getenv('ERROR_LOG_FILE', os.path.join(BASE_DIR, 'debug.log')),
+            'filename': os.getenv('ERROR_LOG_FILE', os.path.join(BASE_DIR, 'local.log')),
             'formatter': 'verbose'
         },
     },
@@ -189,7 +200,19 @@ PIPELINE = {
     'JS_COMPRESSOR': 'pipeline.compressors.uglifyjs.UglifyJSCompressor',
 }
 
-SAFE_DEBUG_EMAILS = ['rioisk@gmail.com']
+REST_FRAMEWORK = {
+    # Use Django's standard `django.contrib.auth` permissions,
+    # or allow read-only access for unauthenticated users.
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated'
+    ],
+
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'api.authenticators.TokenAuthentication',
+    ]
+}
+
+DEBUG_EMAILS = ['rioisk@gmail.com']
 
 if DEBUG:
     try:

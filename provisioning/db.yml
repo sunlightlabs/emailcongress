@@ -14,3 +14,8 @@
       dbuser: "emailcongress"
       dbpassword: "test"
       dbname: "emailcongress"
+    - role: common-roles/postgres
+      pgversion: 9.4
+      dbuser: "phantom_dc"
+      dbpassword: "test"
+      dbname: "phantom_dc"

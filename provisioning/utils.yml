@@ -34,7 +34,7 @@
         name=ipython
         state=present
         virtualenv=/projects/{{project_name}}/virt
-      environment: environment_vars
+      environment: "{{django_environment}}""
       tags:
         - ipython-virtualenv
     - name: install django-pdb

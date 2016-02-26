@@ -70,3 +70,5 @@ class GZIPCachedStorage(MyLocalStaticFilesStorage, PipelineStorage, GZIPMixin):
                         os.removedirs(directory)
                 except:
                     continue
+
+
