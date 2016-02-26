@@ -1,6 +1,6 @@
 [submodule "provisioning/common-roles"]
 	path = provisioning/common-roles
-	url = https://github.com/crdunwel/ansible-common-roles
+	url = https://github.com/crdunwel/ansible-common-roles.git
 [submodule "provisioning/rvm1-ansible"]
 	path = provisioning/rvm1-ansible
 	url = https://github.com/rvm/rvm1-ansible.git
