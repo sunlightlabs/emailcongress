@@ -14,3 +14,5 @@ sustainable Django project with an API, provisioning, and more robust error hand
 - Complete API + add permissions
 - Asset pipeline to upload to S3
 - Sentry Error Reporting
+- Test Suite
+- CI Setup
