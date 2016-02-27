@@ -32,9 +32,13 @@
       rvm1_ruby_install_flags: '--autolibs=0' # waits for user input otherwise
     - role: roles/phantom-of-the-capitol
       project_path: /projects/{{project_name}}/src/phantom-of-the-capitol
-      dbname: 'phantomdc'
-      dbuser: 'phantomdc'
-      dbpassword: ''
+      dbname: 'phantom_dc'
+      dbuser: 'phantom_dc'
+      dbpassword: 'test'
       rack_env: 'production'
+      git_repositories:
+        - repo: https://github.com/EFForg/phantom-of-the-capitol.git
+          dir: phantom-of-the-capitol
+          version: HEAD
     - role: common-roles/nginx
       http_proxy_pass: yes

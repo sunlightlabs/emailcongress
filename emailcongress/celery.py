@@ -9,10 +9,10 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'emailcongress.settings.shared')
 
 celery = Celery('emailcongress')
 for key, val in settings.CONFIG_DICT['celery'].items():
-    setattr(celery.conf, ('celery_' + key).upper(), val)
+    setattr(celery.conf, key.upper(), val)
 
 
-@celery.task(bind=True, max_retries=celery.conf.CELERY_MAX_RETRIES, default_retry_delay=celery.conf.CELERY_RETRY_DELAY)
+@celery.task(bind=True, max_retries=celery.conf.MAX_RETRIES, default_retry_delay=celery.conf.RETRY_DELAY)
 def send_to_phantom_of_the_capitol(self, msg_id=None, msgleg_id=None, force=False):
     """
     Attempts to send the message to various legislators and notifies the user via email

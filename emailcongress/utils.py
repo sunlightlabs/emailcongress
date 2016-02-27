@@ -1,6 +1,8 @@
 def bool_eval(v):
     if type(v) is bool:
         return v
+    elif type(v) is int:
+        return v != 0
     else:
         return v.lower() in ("yes", "true", "t", "1")
 

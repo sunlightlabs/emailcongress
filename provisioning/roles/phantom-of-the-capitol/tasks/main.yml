@@ -12,11 +12,11 @@
   become: yes
   become_user: root
 - name: checkout project directory
-  git: repo={{item.repo}} dest=/projects/{{project_name}}/src/{{item.dir}} version={{item.version|default('HEAD')}} force={{force_git_checkout|default(no)}}
-  with_items:
-    - repo: https://github.com/EFForg/phantom-of-the-capitol.git
-      dir: phantom-of-the-capitol
-      version: HEAD
+  git: repo={{item.repo}} dest=/projects/{{project_name}}/src/{{item.dir}} version={{item.version|default('HEAD')}} force={{force_git_checkout}}
+  with_items: '{{git_repositories}}'
+- name: set permissions of git checkout
+  file: path=/projects/{{project_name}}/src/{{item.dir}} owner={{project_name}} group={{project_name}} mode=755 state=directory recurse=yes
+  with_items: '{{git_repositories}}'
 - name: write config template
   template: src=phantom-dc_config.j2 dest={{project_path}}/config/phantom-dc_config.rb mode=755 owner={{project_name}} group={{project_name}}
 - name: write database config template

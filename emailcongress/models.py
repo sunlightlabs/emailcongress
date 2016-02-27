@@ -520,7 +520,7 @@ class Message(EmailCongressModel):
         self.status = 'block'
         self.save()
 
-    def get_messages_send_status(self):
+    def get_send_status(self):
         target_count = len(self.to_legislators)
         sent_count = MessageLegislator.objects.filter(message=self, sent=True).count()
         if target_count == sent_count:
