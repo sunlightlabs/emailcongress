@@ -1,0 +1,35 @@
+---
+api_keys:
+  sunlight: ""
+  phantom_debug: ""
+  texas_am: ""
+  texas_am_api_version: "4.01"
+  postmark: ""
+api_endpoints:
+  phantom_base: ""
+  congress_base: ""
+  emailcongress_base: ""
+paths:
+  legislator_data_cache: "data/cached_legislators.json"
+misc:
+  tos_days_valid: 180
+  domain: "yourdomain.com"
+  submit_messages: False
+email:
+  no_reply: "noreply@yourdomain.com"
+  catch_all: "myreps"
+  interval_hour_max: 1
+  max_per_interval: 1000
+celery:
+  celery_result_backend: ""
+  broker_url: ""
+  celery_accept_content: ['json']
+  celery_message_compression: 'gzip'
+  celery_task_serializer: 'json'
+  celery_result_serializer: 'json'
+  retry_delay: 3600 # seconds
+  max_retries: 3
+aws:
+  access_key_id: ''
+  secret_access_key: ''
+  storage_bucket_name: ''
