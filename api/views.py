@@ -63,7 +63,7 @@ class MessageViewSet(viewsets.ModelViewSet):
     serializer_class = MessageSerializer
 
     @staticmethod
-    def process_inbound_message(user, umi, msg, send_email=False):
+    def process_inbound_message(user, umi, msg, send_email=True):
         try:
             msg.update_status()
 
@@ -71,13 +71,13 @@ class MessageViewSet(viewsets.ModelViewSet):
             msg.set_legislators(legs['contactable'])
 
             if msg.has_legislators() and msg.is_free_to_send():
-                # emailer.NoReply.message_queued(user, legs['contactable'], msg).send()
+                emailer.NoReply(user).message_queued(legs['contactable'], msg).send(test=send_email)
                 msg.queue_to_send()
             elif not msg.is_free_to_send():
-                pass# emailer.NoReply.over_rate_limit(user, msg).send()
+                emailer.NoReply(user).over_rate_limit(msg).send()
 
             if legs['does_not_represent'] or legs['non_existent']:
-                pass# emailer.NoReply.message_undeliverable(user, legs, msg).send()
+                emailer.NoReply(user).message_undeliverable(legs, msg).send()
             return True
         except:
             return traceback.format_exc()

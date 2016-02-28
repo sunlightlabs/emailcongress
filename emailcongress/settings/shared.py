@@ -212,6 +212,13 @@ REST_FRAMEWORK = {
     ]
 }
 
+EMAIL_BACKEND = 'postmark.django_backend.EmailBackend'
+
+POSTMARK_API_KEY = CONFIG_DICT['api_keys']['postmark']
+POSTMARK_SENDER = CONFIG_DICT['email']['no_reply']
+POSTMARK_TEST_MODE = True
+POSTMARK_TRACK_OPENS = True
+
 DEBUG_EMAILS = ['rioisk@gmail.com']
 
 if DEBUG:

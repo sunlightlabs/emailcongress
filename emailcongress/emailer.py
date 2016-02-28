@@ -3,211 +3,118 @@ from django.conf import settings
 from django.template.loader import render_to_string
 
 
-def apply_admin_filter(func):
-    """
-    Decorator to check the debug status of the app before sending emails to users.
+class NoReply(PMMail):
 
-    @param func: callable defined below
-    @return: callable
-    """
-    def check_for_admin_email(*args, **kwargs):
-        pmmail = func(*args, **kwargs)
+    def __init__(self, user, **kwargs):
+        self.user = user
+        self.to = user.email
+        super().__init__(**kwargs)
 
-        if not settings.DEBUG or (settings.DEBUG and args[1].email in settings.DEBUG_EMAILS):
-            print('Sending live email to ' + args[1].email)
-            return pmmail
+    def _message_headers(self, msg):
+        self.custom_headers = {'In-Reply-To': msg.email_uid,
+                               'References': msg.email_uid}
+
+    def send(self, test=False):
+        if not settings.DEBUG or (settings.DEBUG and self.to[0] in settings.DEBUG_EMAILS):
+            print('Sending live email to ' + self.to[0])
+            return super().send(test=True)
         else:
             print('Debug mode and user not in list of admin emails')
-            return None #DummyEmail(pmmail)
-    return check_for_admin_email
+            return 0
 
-
-class NoReply():
-
-    SENDER_EMAIL = settings.CONFIG_DICT['email']['no_reply']
-    API_KEY = settings.CONFIG_DICT['api_keys']['postmark']
-
-    @classmethod
-    @apply_admin_filter
-    def token_reset(cls, user):
+    def token_reset(self):
         """
-        @return: a python representation of a postmark object
-        @rtype: PMMail
-        """
-        return PMMail(api_key=cls.API_KEY,
-                      sender=cls.SENDER_EMAIL,
-                      to=user.email,
-                      subject="You've requested to change your address information on  Email Congress.",
-                      html_body=render_to_string("emails/token_reset.html",
-                                                 {'verification_link': user.address_change_link(),
-                                                  'user': user}),
-                      track_opens=True
-                      )
 
-    @classmethod
-    @apply_admin_filter
-    def signup_confirm(cls, user):
+        """
+        self.subject = "You've requested to change your address information on  Email Congress."
+        self.html_body = render_to_string("emails/token_reset.html",
+                                          context={'verification_link': self.user.address_change_link(),
+                                                   'user': self.user})
+        return self
+
+    def signup_confirm(self):
         """
         If user signs up through index page then they receive a confirmation email with their change address link
         to verify they are indeed the owner of the email.
-
-
-        @return: a python representation of a postmark object
-        @rtype: PMMail
         """
-        return PMMail(api_key=cls.API_KEY,
-                      sender=cls.SENDER_EMAIL,
-                      to=user.email,
-                      subject="Confirm your Email Congress account.",
-                      html_body=render_to_string("emails/signup_confirm.html",
-                                                        context={'verification_link': user.address_change_link(),
-                                                                 'user': user}),
-                      track_opens=True
-                      )
+        self.subject = "Confirm your Email Congress account."
+        self.html_body = render_to_string("emails/signup_confirm.html",
+                                          context={'verification_link': self.user.address_change_link(),
+                                                   'user': self.user})
+        return self
 
-
-    @classmethod
-    @apply_admin_filter
-    def validate_user(cls, user, msg):
+    def validate_user(self, msg):
         """
-        Handles the case of a first time user or a user who needs to renew this contact information.
+        Handles the case of a first time user or a user who needs to renew their contact information.
 
-        @param user: the user to send the email to
-        @type user: models.User
-        @return: a python representation of a postmark object
-        @rtype: PMMail
+        @param msg: the message object
+        @type msg: emailcongress.models.Message
+        """
+        self.subject = 'Re: ' + msg.subject
+        self.html_body = render_to_string("emails/validate_user.html",
+                                          context={'verification_link': msg.verification_link(),
+                                                   'user': self.user})
+        self._message_headers(msg)
+        return self
+
+    def signup_success(self, msg):
         """
 
-        veri_link = msg.verification_link()
-
-
-        return PMMail(api_key=cls.API_KEY,
-                      sender=cls.SENDER_EMAIL,
-                      to=user.email,
-                      subject='Re: ' + msg.subject,
-                      html_body=render_to_string("emails/validate_user.html",
-                            context={'verification_link': veri_link,
-                                                                 'user': user}),
-                      track_opens=True,
-                      custom_headers={
-                          'In-Reply-To': msg.email_uid,
-                          'References': msg.email_uid,
-                      }
-                      )
-
-    @classmethod
-    @apply_admin_filter
-    def signup_success(cls, user, msg):
+        @param msg: the message object
+        @type msg: emailcongress.models.Message
         """
+        self.subject = "You are successfully signed up for Email Congress!"
+        self.html_body = render_to_string('emails/signup_success.html',
+                                          context={'link': self.user.address_change_link(),
+                                                   'user': self.user,
+                                                   'moc': self.user.default_info.members_of_congress})
+        self._message_headers(msg)
+        return self
 
-        @param user: the user to send the email to
-        @type user: models.User
-        @return: a python representation of a postmark object
-        @rtype: PMMail
-        """
+    def reconfirm_info(self, msg):
 
-        return PMMail(api_key=cls.API_KEY,
-              sender=cls.SENDER_EMAIL,
-              to=user.email,
-              subject="You are successfully signed up for Email Congress!",
-              html_body=render_to_string('emails/signup_success.html',
-                                               context={'link': user.address_change_link(),
-                                                        'user': user,
-                                                        'moc': user.default_info.members_of_congress}),
-              custom_headers={
-                  'In-Reply-To': msg.email_uid,
-                  'References': msg.email_uid,
-                }
-              )
+        self.subject = "Complete your email to Congress"
+        self.html_body = render_to_string("emails/revalidate_user.html",
+                                          context={'verification_link': msg.verification_link(),
+                                                   'user': self.user})
+        self._message_headers(msg)
+        return self
 
+    def over_rate_limit(self, msg):
 
-    @classmethod
-    @apply_admin_filter
-    def reconfirm_info(cls, user, msg):
+        self.subject = "You've sent too many emails recently."
+        self.html_body = render_to_string("emails/over_rate_limit.html",
+                                          context={'user': self.user,
+                                                   'msg': msg})
+        self._message_headers(msg)
+        return self
 
-        veri_link = msg.verification_link()
+    def message_queued(self, legs, msg):
 
-        return PMMail(api_key=cls.API_KEY,
-                      sender=cls.SENDER_EMAIL,
-                      to=user.email,
-                      subject="Complete your email to Congress",
-                      html_body=render_to_string("emails/revalidate_user.html",
-                                                        context={'verification_link': veri_link,
-                                                                 'user': user}),
-                      track_opens=True
-                      )
+        self.subject = "Your email is now on its way!"
+        self.html_body = render_to_string("emails/message_queued.html",
+                                          context={'legislators': legs,
+                                                   'user': self.user})
+        self._message_headers(msg)
+        return self
 
-    @classmethod
-    @apply_admin_filter
-    def over_rate_limit(cls, user, msg):
+    def message_undeliverable(self, leg_buckets, msg):
 
-        return PMMail(api_key=cls.API_KEY,
-              sender=cls.SENDER_EMAIL,
-              to=user.email,
-              subject="You've sent too many emails recently.",
-              html_body=render_to_string("emails/over_rate_limit.html",
-                                                context={'user': user,
-                                                         'msg': msg}),
-              custom_headers={
-                  'In-Reply-To': msg.email_uid,
-                  'References': msg.email_uid,
-              },
-              track_opens=True
-              )
+        self.subject = "Your message to congress is unable to be delivered."
+        self.html_body = render_to_string("emails/message_undeliverable.html",
+                                          context={'leg_buckets': leg_buckets,
+                                                   'user': self.user})
+        self._message_headers(msg)
+        return self
 
-    @classmethod
-    @apply_admin_filter
-    def message_queued(cls, user, legs, msg):
-
-        return PMMail(api_key=cls.API_KEY,
-              sender=cls.SENDER_EMAIL,
-              to=user.email,
-              subject="Your email is now on its way!",
-              html_body=render_to_string("emails/message_queued.html",
-                                                context={'legislators': legs,
-                                                         'user': user}),
-              custom_headers={
-                  'In-Reply-To': msg.email_uid,
-                  'References': msg.email_uid,
-              },
-              track_opens=True
-              )
-
-
-    @classmethod
-    @apply_admin_filter
-    def message_undeliverable(cls, user, leg_buckets, msg):
-
-        return PMMail(api_key=cls.API_KEY,
-              sender=cls.SENDER_EMAIL,
-              to=user.email,
-              subject="Your message to congress is unable to be delivered.",
-              html_body=render_to_string("emails/message_undeliverable.html",
-                                                context={'leg_buckets': leg_buckets,
-                                                         'user': user}),
-              custom_headers={
-                  'In-Reply-To': msg.email_uid,
-                  'References': msg.email_uid,
-              },
-              track_opens=True
-              )
-
-    @classmethod
-    @apply_admin_filter
-    def message_receipt(cls, user, legs, msg):
+    def message_receipt(self, legs, msg):
         """
         Handles the follow-up email for every time a user sends an email message.
 
-        @param user: the user to send the email to
-        @type user: models.User
-        @param legs: dictionary of different cases of contactability with lists of legislators
-        @type legs: dict
-        @param veri_link: the verification link if a captcha is required
-        @type veri_link: string
-        @param rls: the rate limit status
-        @type rls: string
-        @return: a python representation of a postmark object
-        @rtype: PMMail
+        @param legs:
+        @type legs:
+        @param msg:
+        @type msg:
         """
 
         rls = msg.status
@@ -220,34 +127,27 @@ class NoReply():
             'block': 'Unable to send your message to congress at this time.'
         }.get(rls)
 
-        return PMMail(api_key=cls.API_KEY,
-                      sender=cls.SENDER_EMAIL,
-                      to=user.email,
-                      subject=subject,
-                      html_body=render_to_string("emails/message_receipt.html",
-                                                       context={'legislators': legs,
-                                                                'msg': msg,
-                                                                'user': user,
-                                                                'rls': rls}),
-                      track_opens=True
-                      )
+        self.subject = subject
+        self.html_body = render_to_string("emails/message_receipt.html",
+                                          context={'legislators': legs,
+                                                   'msg': msg,
+                                                   'user': self.user,
+                                                   'rls': rls})
+        self._message_headers(msg)
+        return self
 
-
-    @classmethod
-    @apply_admin_filter
-    def send_status(cls, user, msg_legs, msg):
+    def send_status(self, msg_legs, msg):
         """
         Handles the case where phantom of the capitol is unable to send a message to a particular
         legislator. Notifies the user of such and includes the contact form URL in the body.
 
-        @param user: the user to send the email to
-        @type user: models.User
-        @param leg: the legislator that was uncontactable
-        @type leg: models.Legislator
+        @param msg_legs:
+        @type msg_legs:
+        @param msg:
+        @type msg:
         @return: a python representation of a postmark object
         @rtype: PMMail
         """
-
         send_statuses = {True: [], False: []}
         for ml in msg_legs:
             send_statuses[ml.get_send_status()['status'] == 'success'].append(ml.legislator)
@@ -257,75 +157,60 @@ class NoReply():
         else:
             subject = 'Your recent message to congress has successfully sent.'
 
-        return PMMail(api_key=cls.API_KEY,
-                      sender=cls.SENDER_EMAIL,
-                      to=user.email,
-                      subject=subject,
-                      html_body=render_to_string("emails/send_status.html",
-                                                        context={'legislators': send_statuses,
-                                                                 'user': user}),
-                      track_opens=True,
-                                    custom_headers={
-                  'In-Reply-To': msg.email_uid,
-                  'References': msg.email_uid,
-                },
-                      )
+        self.subject = subject
+        self.html_body = render_to_string("emails/send_status.html",
+                                          context={'legislators': send_statuses,
+                                                   'user': self.user})
+        self._message_headers(msg)
+        return self
 
-    @classmethod
-    @apply_admin_filter
-    def successfully_reset_token(cls, user):
+    def successfully_reset_token(self):
         """
         Handles the case of notifying a user when they've changed their address information.
 
-        @param user: the user to send the email to
-        @type user: models.User
-        @param umi: user message information instance
-        @type umi: models.UserMessageInfo
-        @return: a python representation of a postmark object
-        @rtype: PMMail
         """
-        link = user.token.link()
 
-        return PMMail(api_key=cls.API_KEY,
-                      sender=cls.SENDER_EMAIL,
-                      to=user.email,
-                      subject='Your Email Congress token has been successfully reset.',
-                      html_body=render_to_string('emails/successfully_reset_token.html',
-                                                       context={'user': user, 'link': link})
-                      )
+        self.subject = 'Your Email Congress token has been successfully reset.'
+        self.html_body = render_to_string('emails/successfully_reset_token.html',
+                                          context={'user': self.user, 'link': self.user.token.link()})
 
-
-    @classmethod
-    @apply_admin_filter
-    def address_changed(cls, user):
+    def address_changed(self):
         """
         Handles the case of notifying a user when they've changed their address information.
-
-        @param user: the user to send the email to
-        @type user: models.User
-        @return: a python representation of a postmark object
-        @rtype: PMMail
         """
 
-        return PMMail(api_key=cls.API_KEY,
-                      sender=cls.SENDER_EMAIL,
-                      to=user.email,
-                      subject='Your Email Congress contact information has changed.',
-                      html_body=render_to_string('emails/address_changed.html',
-                                                       context={'link': user.address_change_link(),
-                                                                'user': user,
-                                                                'moc': user.default_info.members_of_congress})
-                      )
+        self.subject = 'Your Email Congress contact information has changed.'
+        self.html_body = render_to_string('emails/address_changed.html',
+                                          context={'link': self.user.address_change_link(),
+                                                   'user': self.user,
+                                                   'moc': self.user.default_info.members_of_congress})
+        return self
 
-    @classmethod
-    @apply_admin_filter
-    def remind_reps(cls, user):
-        return PMMail(api_key=cls.API_KEY,
-              sender=cls.SENDER_EMAIL,
-              to=user.email,
-              subject="Reminder of your members of Congress",
-              html_body=render_to_string('emails/remind_reps.html',
-                                               context={'link': user.address_change_link(),
-                                                        'user': user,
-                                                        'moc': user.default_info.members_of_congress})
-              )
+    def remind_reps(self):
+
+        self.subject = "Reminder of your members of Congress"
+        self.html_body = render_to_string('emails/remind_reps.html',
+                                          context={'link': self.user.address_change_link(),
+                                                   'user': self.user,
+                                                   'moc': self.user.default_info.members_of_congress})
+        return self
+
+    def custom_email(self, subject, html_template, text_template, context):
+        """
+
+        @param subject:
+        @type subject:
+        @param html_template:
+        @type html_template:
+        @param text_template:
+        @type text_template:
+        @param context:
+        @type context:
+        @return:
+        @rtype:
+        """
+        self.subject = subject
+        self.html_body = render_to_string(html_template, context=context)
+        self.text_body = render_to_string(text_template, context=context)
+
+        return self

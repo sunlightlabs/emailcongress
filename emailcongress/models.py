@@ -176,9 +176,7 @@ class Legislator(EmailCongressModel):
     def __str__(self):
         return "{0} {1} {2}".format(self.title, self.first_name, self.last_name)
 
-    def create_email_address(self):
-        raise NotImplementedError # TODO
-
+    @property
     def full_title(self):
         return {
             'Com': 'Commissioner',
@@ -187,15 +185,19 @@ class Legislator(EmailCongressModel):
             'Sen': 'Senator'
         }.get(self.title, 'Representative')
 
+    @property
     def full_name(self):
         return "{0} {1}".format(self.first_name, self.last_name)
 
+    @property
     def title_and_last_name(self):
         return "{0} {1}".format(self.title, self.last_name)
 
+    @property
     def title_and_full_name(self):
         return "{0} {1}".format(self.title, self.full_name())
 
+    @property
     def full_title_and_full_name(self):
         return "{0} {1}".format(self.full_title(), self.full_name())
 
@@ -207,6 +209,9 @@ class Legislator(EmailCongressModel):
         return "https://raw.githubusercontent.com/unitedstates/images/gh-pages/congress/{0}/{1}.jpg".format(
             dimensions.get(size, dimensions['small']), self.bioguide_id
         )
+
+    def create_email_address(self):
+        raise NotImplementedError # TODO
 
     @staticmethod
     def humanized_district(state, district):

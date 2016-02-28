@@ -103,7 +103,7 @@ class PostmarkView(AbstractView):
 
                 # first time user or it has been a long time since they've updated their address info
                 if umi.should_update_address_info():
-                    emailer.NoReply.validate_user(user, new_msg).send()
+                    emailer.NoReply(user).validate_user(new_msg).send()
                     return JsonResponse({'status': 'User must accept tos / update their address info.'})
                 else:
                     MessageViewSet.process_inbound_message(user, umi, new_msg, send_email=True)

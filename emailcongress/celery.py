@@ -31,6 +31,6 @@ def send_to_phantom_of_the_capitol(self, msg_id=None, msgleg_id=None, force=Fals
             msg = Message.objects.filter(id=msg_id).first()
             msg.send()
             if msg.get_send_status() == 'sent' or self.request.retries >= self.max_retries:
-                emailer.NoReply.send_status(msg.user_message_info.user, msg.to_legislators, msg).send()
+                emailer.NoReply(msg.user_message_info.user).send_status(msg.to_legislators, msg).send()
             else:
                 raise self.retry(Exception)
