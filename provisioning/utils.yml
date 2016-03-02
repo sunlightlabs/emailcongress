@@ -1,8 +1,7 @@
 ---
 - name: Site admin
   hosts: emailcongress-site
-  user: ubuntu
-  sudo: yes
+  become: yes
   tasks:
     - name: Restart nginx
       service: name=nginx state=restarted

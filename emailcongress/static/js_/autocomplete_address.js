@@ -3,7 +3,7 @@
     function init_autocomplete($form) {
         // JQUERY SELECTORS
         var $submit = $form.find("button[type='submit']");
-        var $zip5 = $form.find("[name='zip5']");
+        var $zip5 = $form.find("[name='zip']");
         var $city = $form.find("[name='city']");
         var $state = $form.find("[name='state']");
         var $street_address = $form.find("[name='street_address']");

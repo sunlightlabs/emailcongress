@@ -31,9 +31,12 @@
     </section>
 
     {% if not context.signup %}
-        {% with data=context %}
-            {% include 'www/forms/address_form.html' %}
-        {% endwith %}
+        <section class="content">
+            <form id="address-form" class="form" method="POST" action="">
+                {% csrf_token %}
+                {{ form }}
+            </form>
+        </section>
     {% endif %}
 
 {% endblock %}

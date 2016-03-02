@@ -2,12 +2,20 @@ import json
 import traceback
 
 from django.http import HttpResponse, JsonResponse
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, FormView
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.mixins import LoginRequiredMixin
 from postmark_inbound import PostmarkInbound
 
 from emailcongress.models import User, Message, Legislator
 from emailcongress import emailer
 from api.views import MessageViewSet
+from emailcongress.forms import UserMessageInfoForm
+
+from services import address_inferrence_service
 
 
 class AbstractView(TemplateView):
@@ -25,13 +33,25 @@ class FaqView(AbstractView):
     template_name = 'www/pages/static/faq.html'
 
 
-class AddressInputView(AbstractView):
+class AutofillAddressView(AbstractView):
 
-    template_name = 'www/pages/update_user_address.html'
+    def post(self, request, *args, **kwargs):
+        address = address_inferrence_service.address_lookup(**(json.loads(request.body.decode('utf-8'))))
+        if address is None:
+            address = {'error': 'Unable to locate city, state, and zip4.'}
+        return JsonResponse(address)
 
-    def get(self, request, *args, **kwargs):
 
-        return super().get(request, *args, **kwargs)
+class SignupView(AbstractView, FormView):
+
+    template_name = 'www/pages/signup.html'
+    form_class = UserMessageInfoForm
+    success_url = '/complete'
+
+    def form_valid(self, form):
+        form.save()
+        # TODO dispatch signup email
+        return super().form_valid(form)
 
         """
         args = {'func_name': 'update_user_address'}
@@ -70,8 +90,13 @@ class ConfirmRepsView(AbstractView):
     pass
 
 
-class CompleteView(AbstractView):
-    pass
+class CompleteView(LoginRequiredMixin, AbstractView):
+
+    template_name = 'www/pages/complete.html'
+
+    def get_context_data(self, **kwargs):
+        kwargs['user'] = self.request.user.user
+        return kwargs
 
 
 class PostmarkView(AbstractView):

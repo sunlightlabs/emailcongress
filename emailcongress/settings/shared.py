@@ -22,7 +22,7 @@ CONFIG_DICT = yaml.load(open(os.path.join(BASE_DIR, 'etc/config.yaml'), 'r'))
 # See https://docs.djangoproject.com/en/1.9/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'jul6qw-(ov@%ops8)7)+xp9v+k7bx58#)m4xwp*zv(0ywfl#)x'
+SECRET_KEY = CONFIG_DICT['django'].get('secret-key', 'not-so-secret')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -40,8 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'django_extensions',
+    'widget_tweaks',
     'storages',
-    'pipeline',
     'rest_framework',
 
     'emailcongress',
@@ -89,8 +89,11 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'emailcongress.wsgi.application'
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+]
 
+WSGI_APPLICATION = 'emailcongress.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases
@@ -163,42 +166,20 @@ LOGGING = {
 
 STATIC_URL = '/static/'
 
+STATICFILES_FINDERS_IGNORE = [
+    'sass',
+    'js_',
+    'css_'
+]
+
 STATICFILES_FINDERS = [
-    'pipeline.finders.PipelineFinder',
-    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'emailcongress.settings.AppDirectoriesFinderIgnore',
+    'emailcongress.settings.FileSystemFinderIgnore'
 ]
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "emailcongress/static"),
 ]
-
-STATICFILES_STORAGE = 'emailcongress.settings.GZIPCachedStorage'
-
-PIPELINE = {
-    'PIPELINE_ENABLED': True,
-    'COMPILERS': (
-        'pipeline.compilers.sass.SASSCompiler',
-    ),
-    'JAVASCRIPT': {
-        'all': {
-            'source_filenames': (
-                'js/*.js',
-            ),
-            'output_filename': 'js/emailcongress.min.js',
-        }
-    },
-    'STYLESHEETS': {
-        'all': {
-            'source_filenames': (
-                'sass/all.scss',
-            ),
-            'output_filename': 'css/emailcongress.min.css',
-        },
-    },
-    'CSS_COMPRESSOR': 'pipeline.compressors.yuglify.YuglifyCompressor',
-    'JS_COMPRESSOR': 'pipeline.compressors.uglifyjs.UglifyJSCompressor',
-}
 
 REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
@@ -234,4 +215,15 @@ if DEBUG:
             "SHOW_TOOLBAR_CALLBACK": show_toolbar,
         }
     except ImportError:
+        pass
+    try:
+        import uwsgi
+        from uwsgidecorators import timer
+        from django.utils import autoreload
+
+        @timer(2)
+        def change_code_graceful_reload(sig):
+            if autoreload.code_changed():
+                uwsgi.reload()
+    except:
         pass

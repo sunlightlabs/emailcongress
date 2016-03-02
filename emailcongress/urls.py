@@ -17,15 +17,17 @@ from django.conf import settings
 from django.conf.urls import url, include
 from django.contrib import admin
 from django.conf.urls.static import static
+
 from emailcongress.views import *
 
 urlpatterns = [
     url(r'^$', IndexView.as_view(), name='index'),
-    url(r'^signup', AddressInputView.as_view(), name='address_input'),
-    url(r'^validate/(?P<token>[\w]{64})', AddressInputView.as_view(), name='validate'),
+    url(r'^signup', SignupView.as_view(), name='address_input'),
+    url(r'^complete', CompleteView.as_view(), name='complete'),
+    url(r'^validate/(?P<token>[\w]{64})', SignupView.as_view(), name='validate'),
     url(r'^faq', FaqView.as_view(), name='faq'),
+    url(r'^ajax/autofill_address', AutofillAddressView.as_view(), name='autofill_address'),
     url(r'^postmark/inbound', PostmarkView.as_view(), name='postmark'),
-    url(r'^signup', AddressInputView.as_view(), name='address_input_view'),
     url(r'^admin/', admin.site.urls),
     url(r'^api/', include('api.urls', namespace='api'))
 ]

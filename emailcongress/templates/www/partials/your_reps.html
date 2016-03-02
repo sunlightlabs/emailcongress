@@ -1,32 +1,22 @@
-<section class="repcards-section">
-{% for leg in context.legislators %}
-{% with %}
+<section class="repcards-section">{% load emailcongress_filters %}
 
-    {% if context.legs_buckets %}
-        {% set in_original_to = (leg in context.legs_buckets['contactable']) %}
-    {% else %}
-        {% set in_original_to = False %}
-    {% endif %}
-
-    <div class="{% if not context.msg or context.msg.is_already_sent() or complete_not_sent %}repcard--horizontal{% else %}repcard{% endif %} {% if in_original_to %}is-selected{% endif %}">
-        <div class="repcard__photo" style="background-image: url({{ leg.image_url() }});">
-        </div>
+{% for leg in user.members_of_congress %}
+    <div class="repcard--horizontal repcard{% if in_original_to %}is-selected{% endif %}">
+        <div class="repcard__photo" style="background-image: url({{ leg.image_url }});"></div>
         <div class="repcard__info">
-            <span>{{ leg.full_title() }}</span>
-            <span>{{ leg.full_name() }}</span>
-            {% if not context.msg or context.msg.is_already_sent() or complete_not_sent %}
+            <span>{{ leg.full_title }}</span>
+            <span>{{ leg.full_name }}</span>
+            {% if not msg %}
             <p><a href="mailto:{{ leg.email }}">{{ leg.email }}</a></p>
             {% endif %}
         </div>
-        {% if context.msg and not context.msg.is_already_sent() and context.legs_buckets%}
+        {% if msg and context.legs_buckets %}
         <div class="repcard__action">
             <input type="checkbox" class="repcard__checkbox" name="legislator_choices[]" value="{{ loop.index0 }}" {% if in_original_to %}checked{% endif %}>
-            <div class="repcard__checkbox--add">{% include '/images/icon_plus.svg' %}</div>
-            <div class="repcard__checkbox--check">{% include '/images/icon_check.svg' %}</div>
+            <div class="repcard__checkbox--add">{% include 'icon_plus.svg' %}</div>
+            <div class="repcard__checkbox--check">{% include 'icon_check.svg' %}</div>
         </div>
         {% endif %}
     </div>
-
-{% endwith %}
 {% endfor %}
 </section>

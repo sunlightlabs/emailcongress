@@ -1,8 +1,7 @@
 ---
 - name: Install Postgres
   hosts: emailcongress-db
-  user: ubuntu
-  sudo: yes
+  become: yes
   roles:
     - role: roles/postgres-apt-ppa
       distro_version_name: trusty

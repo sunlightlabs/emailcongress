@@ -201,6 +201,7 @@ class Legislator(EmailCongressModel):
     def full_title_and_full_name(self):
         return "{0} {1}".format(self.full_title(), self.full_name())
 
+    @property
     def image_url(self, size='small'):
         dimensions = {
             'small': '225x275',
@@ -305,6 +306,10 @@ class User(EmailCongressModel):
         return UserMessageInfo.objects.filter(user=self, default=True).first()
 
     @property
+    def members_of_congress(self):
+        return self.default_info.members_of_congress
+
+    @property
     def email(self):
         return self.django_user.email
 
@@ -337,7 +342,7 @@ class User(EmailCongressModel):
     @staticmethod
     def new_user_trigger(sender, instance, created, *args, **kwargs):
         if created:
-            UserMessageInfo.objects.create(user=instance, default=True)
+            # UserMessageInfo.objects.create(user=instance, default=True)
             Token.objects.create(content_object=instance)
 
     """
@@ -362,8 +367,14 @@ class UserMessageInfo(EmailCongressModel):
     user = models.ForeignKey(User)
     default = models.NullBooleanField(default=False)
 
+    PREFIX_CHOICES = (
+        ('Mr.', 'Mr.'),
+        ('Mrs.', 'Mrs.'),
+        ('Ms.', "Ms.")
+    )
+
     # input by user
-    prefix = models.CharField(max_length=32, blank=False)
+    prefix = models.CharField(max_length=32, blank=False, choices=PREFIX_CHOICES)
     first_name = models.CharField(max_length=256, blank=False)
     last_name = models.CharField(max_length=256, blank=False)
     street_address = models.CharField(max_length=1000, blank=False)
@@ -434,8 +445,7 @@ class UserMessageInfo(EmailCongressModel):
             self.save()
             return self.district
         except:
-            print("Unable to determine district for " + self.mailing_address())
-            raise
+            raise # TODO robust error handling
 
     def humanized_district(self):
         return Legislator.humanized_district(self.state, self.district)

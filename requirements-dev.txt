@@ -7,6 +7,9 @@ django-pipeline
 django-sass-processor
 django-localflavor
 django-debug-toolbar
+django-filter
+python-memcached
+djangorestframework
 requests
 pyyaml
 inflection
@@ -23,8 +26,7 @@ eventlet
 redis
 Celery
 dj-database-url
-djangorestframework
 markdown
-django-filter
-python-memcached
-ansible
+uwsgi
+uwsgidecorators
+django-widget-tweaks

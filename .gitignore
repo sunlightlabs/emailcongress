@@ -7,3 +7,5 @@ staticfiles
 .idea/
 .env
 .vagrant
+node_modules
+local.log

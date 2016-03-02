@@ -5,12 +5,12 @@ from localflavor.us.us_states import USPS_CHOICES
 CODE_TO_STATE = dict(USPS_CHOICES)
 
 
-class USPSScraper():
+class USPSScraper:
 
     USPS_BASE_URL = 'https://tools.usps.com/go/ZipLookupResultsAction!input.action'
 
     @staticmethod
-    def usps_request(self, **kwargs):
+    def usps_request(**kwargs):
 
         # construct get parameters string
         params = {
@@ -26,16 +26,16 @@ class USPSScraper():
         }
 
         # make request. need to spoof headers or get infinite redirect
-        return requests.get(self.USPS_BASE_URL, params=params, verify=False,
+        return requests.get(USPSScraper.USPS_BASE_URL, params=params, verify=False,
                             headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_0) AppleWebKit/537.36'
                                                    ' (KHTML, like Gecko) Chrome/39.0.2171.99 Safari/537.36'},
                             timeout=5)
 
     @staticmethod
-    def usps_address_lookup(self, **kwargs):
+    def usps_address_lookup(**kwargs):
 
         # parse html
-        soup = BeautifulSoup(self.usps_request(**kwargs).text)
+        soup = BeautifulSoup(USPSScraper.usps_request(**kwargs).text)
 
         # get container div for results
         results_content = soup.find(id='results-content')
@@ -72,7 +72,8 @@ class USPSScraper():
 
         return address
 
-    def usps_zip_lookup(self, street_address, city, state, z5=''):
+    @staticmethod
+    def usps_zip_lookup(street_address, city, state, z5=''):
         """
 
         @param street_address: street address
@@ -87,5 +88,5 @@ class USPSScraper():
         @rtype: tuple
         """
 
-        address = self.usps_address_lookup(street_address=street_address, city=city, state=state, zip5=z5)
+        address = USPSScraper.usps_address_lookup(street_address=street_address, city=city, state=state, zip5=z5)
         return address['zip5'], address['zip4']

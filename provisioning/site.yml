@@ -1,11 +1,12 @@
 ---
 - name: Set up emailcongress.us
   hosts: emailcongress-site
+  become: yes
   vars:
     configure_user: yes
   roles:
     - role: common-roles/common
-      hostname: emailcongress.org
+      hostname: emailcongress.us
       extra_packages:
         - libpq-dev # Need this for psycopg2
         - memcached
@@ -22,7 +23,6 @@
         - repo: https://github.com/crdunwel/emailcongress.git
           dir: emailcongress
           version: HEAD
-      requirements: "{{ requirements_file }}"
       wsgi_module: emailcongress.wsgi:application
       serve_static: yes
     - role: roles/emailcongress

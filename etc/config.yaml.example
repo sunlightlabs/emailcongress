@@ -8,7 +8,6 @@ api_keys:
 api_endpoints:
   phantom_base: ""
   congress_base: ""
-  emailcongress_base: ""
 paths:
   legislator_data_cache: "data/cached_legislators.json"
 misc:
