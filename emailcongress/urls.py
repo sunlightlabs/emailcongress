@@ -21,14 +21,17 @@ from django.conf.urls.static import static
 from emailcongress.views import *
 
 urlpatterns = [
+    # pages
     url(r'^$', IndexView.as_view(), name='index'),
-    url(r'^signup', SignupView.as_view(), name='address_input'),
+    url(r'^signup', SignupView.as_view(), name='signup'),
     url(r'^complete', CompleteView.as_view(), name='complete'),
     url(r'^validate/(?P<token>[\w]{64})', SignupView.as_view(), name='validate'),
     url(r'^faq', FaqView.as_view(), name='faq'),
+    url(r'^admin/', admin.site.urls),
+    # actions
     url(r'^ajax/autofill_address', AutofillAddressView.as_view(), name='autofill_address'),
     url(r'^postmark/inbound', PostmarkView.as_view(), name='postmark'),
-    url(r'^admin/', admin.site.urls),
+    # import
     url(r'^api/', include('api.urls', namespace='api'))
 ]
 

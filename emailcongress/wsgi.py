@@ -8,13 +8,9 @@ https://docs.djangoproject.com/en/1.9/howto/deployment/wsgi/
 """
 
 import os
-import yaml
-
+from etc import CONFIG_DICT
 from django.core.wsgi import get_wsgi_application
 
-ETC_DIR_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-CONFIG_DICT = yaml.load(open(os.path.join(ETC_DIR_PATH, 'etc/config.yaml'), 'r'))
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "emailcongress.settings.%s" % CONFIG_DICT['django']['settings'])
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "emailcongress.settings.%s" % CONFIG_DICT['django']['environment'])
 
 application = get_wsgi_application()

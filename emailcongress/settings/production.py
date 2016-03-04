@@ -12,9 +12,12 @@ AWS_STORAGE_BUCKET_NAME = CONFIG_DICT['aws']['storage_bucket_name']
 
 # see https://github.com/boto/boto/issues/2836
 AWS_S3_CALLING_FORMAT = 'boto.s3.connection.OrdinaryCallingFormat'
-# AWS_S3_CUSTOM_DOMAIN = '%s.s3.amazonaws.com' % AWS_STORAGE_BUCKET_NAME
-AWS_S3_CUSTOM_DOMAIN = 'd1tnme6pnhrkup.cloudfront.net'
-
+AWS_S3_CUSTOM_DOMAIN = CONFIG_DICT['aws']['cloudfront_url']
 # STATIC_URL = "https://%s/" % AWS_S3_CUSTOM_DOMAIN
 
 STATICFILES_STORAGE = 'emailcongress.settings.MyS3BotoStorage'
+
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+
+PROTOCOL = CONFIG_DICT.get('protocol', 'https')

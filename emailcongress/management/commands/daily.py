@@ -50,6 +50,8 @@ def import_congresspeople(from_cache=False):
                 leg.email = data['email']
                 leg.save()
                 all_legislators.append(data)
+            except KeyboardInterrupt:
+                pass
             except:
                 print("No data from congress api for : " + bgi)
                 # TODO report
@@ -67,16 +69,13 @@ class Command(BaseCommand):
     }
 
     def add_arguments(self, parser):
-        parser.add_argument('--task', nargs=1, type=str)
+        parser.add_argument('task', nargs=1, type=str)
         parser.add_argument('--kwargs', type=lambda kv: kv.split("="), dest='kwargs', nargs='*', default=[])
 
     def handle(self, **options):
         try:
             if options.get('task'):
-                task = options.pop('task')[0]
-                kwargs = {item[0]: item[1] for item in options['kwargs']}
-                print(kwargs)
-                self.tasks.get(task)(**kwargs)
+                self.tasks.get(options.pop('task')[0])(**{item[0]: item[1] for item in options['kwargs']})
             else:
                 for name, method in self.tasks.items():
                     method()

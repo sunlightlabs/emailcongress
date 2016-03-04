@@ -9,3 +9,4 @@ staticfiles
 .vagrant
 node_modules
 local.log
+__pycache__

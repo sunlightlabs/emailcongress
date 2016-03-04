@@ -52,6 +52,7 @@
                         autocomplete_address_values(result['city'], result['state'], result['zip4'], result['zip5']);
                         $submit.prop('disabled', false);
                         $submit.text('Submit');
+                        $autofill__group.removeClass('has-error');
                     }
                 },
                 error: function(jqXHR, textStatus, errorThrown) {

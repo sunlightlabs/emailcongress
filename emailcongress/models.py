@@ -10,6 +10,7 @@ from django.core import serializers
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.contrib.auth.models import User as DjangoUser
+from django.core.urlresolvers import reverse
 from django.conf import settings
 
 from jsonfield import JSONField
@@ -106,8 +107,9 @@ class Token(EmailCongressModel):
         return self.key
 
     def link(self):
-        pass
-        # return app_router_path('update_user_address', token=self.token)
+        return utils.construct_link(settings.PROTOCOL,
+                                    settings.HOSTNAME,
+                                    reverse('validate', kwargs={'token': self.key}))
 
     @classmethod
     def uid_creator(cls):
@@ -241,7 +243,7 @@ class Legislator(EmailCongressModel):
         @return: converted email
         @rtype: str
         """
-        return email.replace("opencongress.org", settings.CONFIG_DICT['misc']['domain'])
+        return email.replace("opencongress.org", settings.CONFIG_DICT['email']['domain'])
 
     @staticmethod
     def find_by_email(recip_email):
@@ -313,6 +315,10 @@ class User(EmailCongressModel):
     def email(self):
         return self.django_user.email
 
+    @property
+    def verification_link(self):
+        return self.token.get().link()
+
     def messages(self, **filters):
         query = Q(**filters) & Q(user_message_info__in=self.usermessageinfo_set.all())
         return Message.objects.filter(query).order_by('created_at')
@@ -345,9 +351,10 @@ class User(EmailCongressModel):
             # UserMessageInfo.objects.create(user=instance, default=True)
             Token.objects.create(content_object=instance)
 
+
+
     """
-    def address_change_link(self):
-        return self.token.link()
+
 
     class Analytics(BaseAnalytics):
 
@@ -417,7 +424,7 @@ class UserMessageInfo(EmailCongressModel):
         if not self.zip4:
             self.zip4_lookup(force=True)
 
-    def geolocate_address(self, force=False):
+    def geolocate_address(self, force=False, save=False):
 
         if force or (self.latitude is None or self.longitude is None):
             try:
@@ -425,27 +432,29 @@ class UserMessageInfo(EmailCongressModel):
                                                                               city=self.city,
                                                                               state=self.state,
                                                                               zip5=self.zip5)
-                self.save()
+                if save:
+                    self.save()
                 return self.latitude, self.longitude
             except:
-                return None, None
+                raise
 
-    def determine_district(self, force=False):
+    def determine_district(self, force=False, save=False):
 
         if not force and self.district is not None:
             return self.district
 
         data = determine_district_service.determine_district(zip5=self.zip5)
         if data is None:
-            self.geolocate_address()
-            data = determine_district_service.determine_district(latitude=self.latitude, longitude=self.longitude)
+            lat, lng = self.geolocate_address()
+            data = determine_district_service.determine_district(latitude=lat, longitude=lng)
         try:
             self.district = data.get('district')
             self.state = data.get('state')
-            self.save()
+            if save:
+                self.save()
             return self.district
         except:
-            raise # TODO robust error handling
+            return None # TODO robust error handling
 
     def humanized_district(self):
         return Legislator.humanized_district(self.state, self.district)

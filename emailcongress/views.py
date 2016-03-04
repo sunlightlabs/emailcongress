@@ -1,7 +1,7 @@
 import json
 import traceback
 
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 from django.views.generic import TemplateView, FormView
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
@@ -49,9 +49,15 @@ class SignupView(AbstractView, FormView):
     success_url = '/complete'
 
     def form_valid(self, form):
-        form.save()
-        # TODO dispatch signup email
-        return super().form_valid(form)
+        django_user = form.save()
+        emailer.NoReply(django_user).signup_confirm().send()
+
+        redirect = super().form_valid(form)
+        # This is to allow new users to see the complete view shortly after signup.
+        # People can manually set this cookie to see the complete view but there's nothing
+        # to gain from seeing that page. New account creation is handled through this class and method.
+        redirect.set_cookie('signup', True, max_age=300)
+        return redirect
 
         """
         args = {'func_name': 'update_user_address'}
@@ -90,13 +96,15 @@ class ConfirmRepsView(AbstractView):
     pass
 
 
-class CompleteView(LoginRequiredMixin, AbstractView):
+class CompleteView(AbstractView):
 
     template_name = 'www/pages/complete.html'
 
-    def get_context_data(self, **kwargs):
-        kwargs['user'] = self.request.user.user
-        return kwargs
+    def get(self, request, *args, **kwargs):
+        if self.request.COOKIES.get('signup', False):
+            return super().get(request, *args, **kwargs)
+        else:
+            return HttpResponseRedirect('/')
 
 
 class PostmarkView(AbstractView):

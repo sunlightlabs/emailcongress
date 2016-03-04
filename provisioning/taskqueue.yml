@@ -10,7 +10,7 @@
     proxy_port: 3000
   roles:
     - role: common-roles/common
-      hostname: taskqueue.emailcongress.org
+      hostname: "taskqueue.{{hostname}}"
       extra_packages:
         - libpq-dev
         - curl

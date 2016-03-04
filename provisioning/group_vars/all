@@ -1,4 +1,5 @@
 ---
+hostname: emailcongress.us
 project_name: emailcongress
 django_settings_module: emailcongress.settings.local
 requirements: "requirements-dev.txt"

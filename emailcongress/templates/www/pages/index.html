@@ -7,9 +7,9 @@
             <div class="hero__content">
                 <h1>{% include 'emailcongress-logo.svg' %}</h1>
                 <h2 class="hero__description">Contacting Congress is now as easy as email.</h2>
-                <a class="hero__button" href="{% url 'address_input_view' %}">Get Started</a>
+                <a class="hero__button" href="{% url 'signup' %}">Get Started</a>
             </div>
-            <video autoplay="true" class="hero__video visible-md visible-lg" loop="loop">
+            <video autoplay class="hero__video visible-md visible-lg" loop="loop">
                 <source src="{% static 'images/flag-background.ogg' %}" type="video/ogg">
                 <source src="{% static 'images/flag-background.mp4' %}" type="video/mp4">
             </video>
@@ -18,7 +18,8 @@
         <section class="section u-bg-light" id="returninguser">
             <div class="content_wrapper">
                 {% include 'icon_user.svg' %}
-                <h2 class="section__heading--large">Returning to Email Congress?</h2>
+                <h2 class="section__heading--large">Returning t
+                    o Email Congress?</h2>
                 <div class="row">
                     <div class="col-sm-6">
                         <button id="update_address" class="button__secondary" data-js="toggle-email-form">I moved&mdash;update my information</button>

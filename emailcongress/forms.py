@@ -74,7 +74,7 @@ class UserMessageInfoForm(ModelForm):
                       widget=TextInput(
                           attrs={'class': 'form__input--masked',
                                  'placeholder': 'Phone Number',}),
-                      validators=[validators.RegexValidator(regex=r'^\(\d{3}\) \d{3}-\d{4}$',
+                      validators=[validators.RegexValidator(regex=r'^\([0-9]{3}\) [0-9]{3}-[0-9]{4}$',
                                         message='Please enter a phone number with format (XXX) XXX-XXXX')]
                       )
 
@@ -82,6 +82,7 @@ class UserMessageInfoForm(ModelForm):
                   widget=EmailInput(
                       attrs={'class': 'form__input',
                              'placeholder': 'E-mail'}),
+                  error_messages={'invalid': 'Please enter a valid email address.'}
                   )
 
     class Meta:
@@ -93,10 +94,43 @@ class UserMessageInfoForm(ModelForm):
         return render_to_string('www/forms/address_form.html', context={'form': self})
 
     def clean_email(self):
-        email = self.cleaned_data['email']
+        email = self.cleaned_data.get('email')
         if DjangoUser.objects.filter(email=email).exists():
-            raise ValidationError("Email already exists")
+            raise ValidationError("Email already exists") # TODO handle case where user previously signed up and forgot or malicious signups
         return email
+
+    def clean_phone_number(self):
+        return re.sub("[^0-9]", "", self.cleaned_data.get('phone_number'))
+
+    def clean_first_name(self):
+        return self.cleaned_data.get('first_name').replace(' ', '')
+
+    def clean_last_name(self):
+        return self.cleaned_data.get('last_name').replace(' ', '')
+
+    def clean_zip(self):
+        zipdata = self.cleaned_data.get('zip').split('-')
+        self.instance.zip5 = zipdata[0]
+        self.instance.zip4 = zipdata[1]
+        return zipdata
+
+    def _post_clean(self):
+        """
+        We need the model instance created before we can determine the district.
+        """
+        super()._post_clean()
+        try:
+            self.instance.determine_district()
+        except:
+            error_msg = 'Unable to determine your congressional district from your zip code ' \
+                        'and/or address. Please check again that your address information is ' \
+                        'correct and try again. If this problem persists then please ' \
+                        'contact us <a href="mailto:labs@sunlightfoundation.com">here</a>. '\
+                        'You may also check to see if the government is able to determine ' \
+                        'your congressional district ' \
+                        '<a target="_blank" href="https://www.house.gov/representatives/find/">here</a>.'
+            self.add_error(None, ValidationError(error_msg))
+            # TODO robust error logging
 
     def save(self, commit=True):
         django_user = DjangoUser.objects.create_user(username=self.data['email'],
@@ -106,24 +140,6 @@ class UserMessageInfoForm(ModelForm):
 
         self.instance.user = user
         self.instance.default = True
-        self._autocomplete_zip()
-        self._autocomplete_phone()
-        self._doctor_names()
-
-        self.instance.accept_tos = datetime.datetime.now()
-        self.instance.determine_district()
 
         super().save(commit=commit)
         return django_user
-
-    def _autocomplete_zip(self):
-        zipdata = self.data['zip'].split('-')
-        self.instance.zip5 = zipdata[0]
-        self.instance.zip4 = zipdata[1]
-
-    def _autocomplete_phone(self):
-        self.instance.phone_number = re.sub("[^0-9]", "", self.instance.phone_number)
-
-    def _doctor_names(self):
-        self.instance.first_name = self.instance.first_name.replace(' ', '')
-        self.instance.last_name = self.instance.last_name.replace(' ', '')

@@ -6,7 +6,7 @@
     configure_user: yes
   roles:
     - role: common-roles/common
-      hostname: emailcongress.us
+      hostname: "{{hostname}}"
       extra_packages:
         - libpq-dev # Need this for psycopg2
         - memcached

@@ -13,11 +13,14 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 import os
 import yaml
 import dj_database_url
+from etc import CONFIG_DICT
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-CONFIG_DICT = yaml.load(open(os.path.join(BASE_DIR, 'etc/config.yaml'), 'r'))
+HOSTNAME = CONFIG_DICT['hostname']
+
+#CONFIG_DICT = yaml.load(open(os.path.join(BASE_DIR, 'etc/config.yaml'), 'r'))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.9/howto/deployment/checklist/
 
@@ -201,6 +204,8 @@ POSTMARK_TEST_MODE = True
 POSTMARK_TRACK_OPENS = True
 
 DEBUG_EMAILS = ['rioisk@gmail.com']
+
+PROTOCOL = CONFIG_DICT.get('protocol', 'http')
 
 if DEBUG:
     try:

@@ -26,7 +26,7 @@ class USPSScraper:
         }
 
         # make request. need to spoof headers or get infinite redirect
-        return requests.get(USPSScraper.USPS_BASE_URL, params=params, verify=False,
+        return requests.get(USPSScraper.USPS_BASE_URL, params=params, verify=True,
                             headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_0) AppleWebKit/537.36'
                                                    ' (KHTML, like Gecko) Chrome/39.0.2171.99 Safari/537.36'},
                             timeout=5)
@@ -35,7 +35,7 @@ class USPSScraper:
     def usps_address_lookup(**kwargs):
 
         # parse html
-        soup = BeautifulSoup(USPSScraper.usps_request(**kwargs).text)
+        soup = BeautifulSoup(USPSScraper.usps_request(**kwargs).text, 'html.parser')
 
         # get container div for results
         results_content = soup.find(id='results-content')

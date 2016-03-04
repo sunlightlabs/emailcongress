@@ -5,22 +5,22 @@ from django.template.loader import render_to_string
 
 class NoReply(PMMail):
 
-    def __init__(self, user, **kwargs):
-        self.user = user
-        self.to = user.email
+    def __init__(self, django_user, **kwargs):
         super().__init__(**kwargs)
+        self.user = django_user.user
+        self.to = django_user.email
 
     def _message_headers(self, msg):
         self.custom_headers = {'In-Reply-To': msg.email_uid,
                                'References': msg.email_uid}
 
     def send(self, test=False):
-        if not settings.DEBUG or (settings.DEBUG and self.to[0] in settings.DEBUG_EMAILS):
-            print('Sending live email to ' + self.to[0])
-            return super().send(test=True)
+        if not settings.DEBUG or (settings.DEBUG and self.to in settings.DEBUG_EMAILS):
+            print('Sending live email to ' + self.to)
+            return super().send(test=test)
         else:
             print('Debug mode and user not in list of admin emails')
-            return 0
+            return super().send(test=True)
 
     def token_reset(self):
         """
@@ -28,7 +28,7 @@ class NoReply(PMMail):
         """
         self.subject = "You've requested to change your address information on  Email Congress."
         self.html_body = render_to_string("emails/token_reset.html",
-                                          context={'verification_link': self.user.address_change_link(),
+                                          context={'verification_link': self.user.verification_link(),
                                                    'user': self.user})
         return self
 
@@ -38,9 +38,9 @@ class NoReply(PMMail):
         to verify they are indeed the owner of the email.
         """
         self.subject = "Confirm your Email Congress account."
-        self.html_body = render_to_string("emails/signup_confirm.html",
-                                          context={'verification_link': self.user.address_change_link(),
-                                                   'user': self.user})
+        self.html_body = render_to_string("emails/html_body/signup_confirm.html",
+                                          context={'user': self.user,
+                                                   'verification_link': self.user.verification_link})
         return self
 
     def validate_user(self, msg):
@@ -65,7 +65,7 @@ class NoReply(PMMail):
         """
         self.subject = "You are successfully signed up for Email Congress!"
         self.html_body = render_to_string('emails/signup_success.html',
-                                          context={'link': self.user.address_change_link(),
+                                          context={'link': self.user.verification_link(),
                                                    'user': self.user,
                                                    'moc': self.user.default_info.members_of_congress})
         self._message_headers(msg)
@@ -181,7 +181,7 @@ class NoReply(PMMail):
 
         self.subject = 'Your Email Congress contact information has changed.'
         self.html_body = render_to_string('emails/address_changed.html',
-                                          context={'link': self.user.address_change_link(),
+                                          context={'link': self.user.verification_link(),
                                                    'user': self.user,
                                                    'moc': self.user.default_info.members_of_congress})
         return self
@@ -190,7 +190,7 @@ class NoReply(PMMail):
 
         self.subject = "Reminder of your members of Congress"
         self.html_body = render_to_string('emails/remind_reps.html',
-                                          context={'link': self.user.address_change_link(),
+                                          context={'link': self.user.verification_link(),
                                                    'user': self.user,
                                                    'moc': self.user.default_info.members_of_congress})
         return self

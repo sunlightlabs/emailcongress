@@ -3,16 +3,19 @@
 {% if form.errors %}
     <ul class="form__errorlist">
         <li><strong>Whoops! Please fix these problems with your form.</strong></li>
+        <ul>
+        {% for error in form.non_field_errors %}
+            <li>{{ error|safe }}</li>
+        {% endfor %}
+        </ul>
         {% for field in form %}
             {% if field.errors and field != '__all__' %}
               <strong>{{ field.label }}:</strong>
             {% endif %}
             <ul>
-                {% for error in field.errors %}
-                    <li>
-                      {{ error|safe }}
-                    </li>
-                {% endfor %}
+            {% for error in field.errors %}
+                <li>{{ error|safe }}</li>
+            {% endfor %}
             </ul>
         {% endfor %}
     </ul>
