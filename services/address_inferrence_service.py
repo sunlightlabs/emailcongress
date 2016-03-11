@@ -1,3 +1,6 @@
+from threading import Thread
+from queue import Queue
+
 from lib.usps import USPSScraper
 from services.geolocation_service import geolocate, reverse_geolocate
 
@@ -5,11 +8,16 @@ from services.geolocation_service import geolocate, reverse_geolocate
 def address_lookup(**kwargs):
 
     try:
-        address = USPSScraper.usps_address_lookup(**kwargs)
-        if address['city'] is not '' and address['state'] is not '':
-            return address
-        lat, lng = geolocate(**kwargs)
-        return reverse_geolocate(lat, lng).address()
+        queue = Queue()
+        Thread(target=USPSScraper.usps_address_lookup, args=(queue,), kwargs=kwargs).start()
+        try:
+            address = queue.get(timeout=3)
+            if address['city'] is not '' and address['state'] is not '':
+                return address
+        except:
+            pass
+        state, lat, lng = geolocate(state=True, **kwargs)
+        return reverse_geolocate(lat, lng, state=state)
     except:
         return None
 

@@ -1,5 +1,4 @@
 ---
-hostname: emailcongress.us
 project_name: emailcongress
 django_settings_module: emailcongress.settings.local
 requirements: "requirements-dev.txt"
@@ -8,5 +7,5 @@ django_environment:
   SECRET_KEY: a-bad-secret-key
   DATABASE_URL: postgres://emailcongress:test@10.73.98.101:5432/emailcongress
   HAYSTACK_URL: http://10.73.98.102:9200/
-  BROKER_URL: redis://10.73.98.103/0
-  CELERY_RESULT_BACKEND: redis://10.73.98.103/1
+  BROKER_URL: redis://10.73.98.103:6379/
+  CELERY_RESULT_BACKEND: redis://10.73.98.103:6379/

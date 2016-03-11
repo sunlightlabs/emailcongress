@@ -1,5 +1,6 @@
 from inflection import camelize
 import requests
+import traceback
 
 
 class Geocoder():
@@ -14,8 +15,8 @@ class Geocoder():
     def lookup(self, **params):
         self.service.lookup(**params)
 
-    def reverse_lookup(self, lat, lng):
-        self.service.reverse_lookup(lat, lng)
+    def reverse_lookup(self, lat, lng, **kwargs):
+        self.service.reverse_lookup(lat, lng, **kwargs)
 
     def check_for_data(self):
         func = self
@@ -51,7 +52,11 @@ class Geocoder():
     def zip4(self):
         return self.service.zip4()
 
-    class TexasAm():
+    @check_for_data
+    def address(self):
+        return self.service.address()
+
+    class TexasAm:
 
         TEXAS_AM_BASE_URL = 'https://geoservices.tamu.edu/Services/Geocode/WebService/GeocoderWebServiceHttpNonParsed_V04_01.aspx'
         TEXAS_AM_REVERSE_BASE_URL = 'https://geoservices.tamu.edu/Services/ReverseGeocoding/WebService/v04_01/HTTP/default.aspx'
@@ -79,27 +84,31 @@ class Geocoder():
             }
 
             try:
-                r = requests.get(self.TEXAS_AM_BASE_URL, params=params, verify=False)
+                r = requests.get(self.TEXAS_AM_BASE_URL, params=params)
                 self.data = r.json() if self.format == 'json' else r.text
+                return self
                 # TODO convert other formats to correct json
             except:
                 pass
 
-        def reverse_lookup(self, lat, lng):
+        def reverse_lookup(self, lat, lng, **kwargs):
 
             params = {
                 'apiKey': self.apiKey,
                 'version': self.version,
                 'lat': lat,
                 'lon': lng,
-                'format': self.format
+                'format': self.format,
+                'state': kwargs.get('state', ''),
             }
 
             try:
-                r = requests.get(self.TEXAS_AM_REVERSE_BASE_URL, params=params, verify=False)
+                r = requests.get(self.TEXAS_AM_REVERSE_BASE_URL, params=params)
                 self.data = r.json() if self.format == 'json' else r.text
+                return self
                 # TODO convert other formats to correct json
             except:
+                print(traceback.format_exc())
                 pass
 
         def address(self):

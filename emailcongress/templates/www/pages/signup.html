@@ -34,7 +34,7 @@
         <section class="content">
             <form id="address-form" class="form" method="POST" action="">
                 {% csrf_token %}
-                {{ form }}
+                {% include 'www/forms/address_form.html' with form=form %}
             </form>
         </section>
     {% endif %}

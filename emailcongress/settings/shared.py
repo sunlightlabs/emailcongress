@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 
 import os
-import yaml
 import dj_database_url
 from etc import CONFIG_DICT
 
@@ -19,10 +18,7 @@ from etc import CONFIG_DICT
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 HOSTNAME = CONFIG_DICT['hostname']
-
-#CONFIG_DICT = yaml.load(open(os.path.join(BASE_DIR, 'etc/config.yaml'), 'r'))
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/1.9/howto/deployment/checklist/
+PROTOCOL = CONFIG_DICT.get('protocol', 'http')
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = CONFIG_DICT['django'].get('secret-key', 'not-so-secret')
@@ -32,9 +28,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-# Application definition
-
 INSTALLED_APPS = [
+    # django core
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -42,11 +37,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    # extra
     'django_extensions',
     'widget_tweaks',
     'storages',
     'rest_framework',
 
+    # ours
     'emailcongress',
     'api',
 ]
@@ -87,7 +84,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-            ],
+            ]
         },
     },
 ]
@@ -102,11 +99,10 @@ WSGI_APPLICATION = 'emailcongress.wsgi.application'
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases
 # https://github.com/kennethreitz/dj-database-url
 # dj_database_url allows the database to be specified in the environmental variable DATABASE_URL as a string
-DATABASES = {'default': dj_database_url.config()}
+DATABASES = {'default': dj_database_url.config(default=CONFIG_DICT['django']['database_uri'])}
 
 # Password validation
 # https://docs.djangoproject.com/en/1.9/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -202,25 +198,25 @@ POSTMARK_API_KEY = CONFIG_DICT['api_keys']['postmark']
 POSTMARK_SENDER = CONFIG_DICT['email']['no_reply']
 POSTMARK_TEST_MODE = True
 POSTMARK_TRACK_OPENS = True
+POSTMARK_DEBUG_EMAILS = CONFIG_DICT['email']['approved_debug_emails']
 
-DEBUG_EMAILS = ['rioisk@gmail.com']
+DAYS_TOS_VALID = CONFIG_DICT['misc']['tos_days_valid']
 
-PROTOCOL = CONFIG_DICT.get('protocol', 'http')
 
 if DEBUG:
     try:
         import debug_toolbar
-        INSTALLED_APPS += ['debug_toolbar', ]
+        INSTALLED_APPS += ['debug_toolbar']
         MIDDLEWARE_CLASSES += ['debug_toolbar.middleware.DebugToolbarMiddleware']
 
         def show_toolbar(request):
             return True
 
         DEBUG_TOOLBAR_CONFIG = {
-            "SHOW_TOOLBAR_CALLBACK": show_toolbar
+            "SHOW_TOOLBAR_CALLBACK": show_toolbar,
         }
 
-        # DEBUG_TOOLBAR_PANELS = ['memcache_toolbar.panels.memcache.MemcachePanel',]
+        # TODO figure out memcache debug panel
 
     except ImportError:
         pass
@@ -229,6 +225,7 @@ if DEBUG:
         from uwsgidecorators import timer
         from django.utils import autoreload
 
+        # this simulates autoreload like manage.py runserver for uwsgi
         @timer(2)
         def change_code_graceful_reload(sig):
             if autoreload.code_changed():

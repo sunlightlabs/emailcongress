@@ -7,11 +7,12 @@ from django.db.models import Q
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.core import serializers
-from django.db.models.signals import post_save, pre_save
+from django.db.models.signals import post_save, pre_save, pre_delete, post_delete
 from django.dispatch import receiver
 from django.contrib.auth.models import User as DjangoUser
 from django.core.urlresolvers import reverse
 from django.conf import settings
+from django.db import IntegrityError, transaction
 
 from jsonfield import JSONField
 from localflavor.us import models as us_models
@@ -70,9 +71,9 @@ class EmailCongressModel(models.Model):
 
 class Token(EmailCongressModel):
 
-    key = models.CharField(max_length=64, unique=True, null=True)
-    object_id = models.PositiveIntegerField()
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    key = models.CharField(max_length=64, unique=True, null=True, db_index=True)
+    object_id = models.PositiveIntegerField(db_index=True)
+    content_type = models.ForeignKey(ContentType, db_index=True)
     content_object = GenericForeignKey()
 
     objects = TokenManager()
@@ -136,6 +137,7 @@ class Token(EmailCongressModel):
         """
         msg, umi, user = None, None, None
         token = cls.objects.filter(key=key).first()
+
         if token is not None:
             item = token.content_object
             if type(item) is User:
@@ -148,19 +150,46 @@ class Token(EmailCongressModel):
 
         return msg, umi, user
 
+    @staticmethod
+    def delete_content_object(sender, instance, **kwargs):
+        try:
+            instance.content_object.delete()
+        except:
+            pass
+
+receiver(post_delete, sender=Token)(Token.delete_content_object)
+
+
+class HasTokenMixin(object):
+
+    @property
+    def verification_link(self):
+        ctype = ContentType.objects.get_for_model(self)
+        return Token.objects.get(content_type=ctype, object_id=self.pk).link()
+
+    @staticmethod
+    def create_token_trigger(sender, instance, created, *args, **kwargs):
+        if created:
+            Token.objects.create(content_object=instance)
+
+    @staticmethod
+    def delete_related_token(sender, instance, **kwargs):
+        ctype = ContentType.objects.get_for_model(instance)
+        Token.objects.filter(content_type=ctype, object_id=instance.pk).delete()
+
 
 class Legislator(EmailCongressModel):
 
-    bioguide_id = models.CharField(max_length=7, unique=True, null=False)
-    chamber = models.CharField(max_length=20)
-    state = us_models.USStateField()
-    district = models.IntegerField(null=True)
-    title = models.CharField(max_length=3)
-    first_name = models.CharField(max_length=256)
-    last_name = models.CharField(max_length=256)
-    contact_form = models.CharField(max_length=1024, null=True)
-    email = models.CharField(max_length=256)
-    contactable = models.BooleanField(default=True)
+    bioguide_id = models.CharField(max_length=7, unique=True, null=False, db_index=True)
+    chamber = models.CharField(max_length=20, db_index=True)
+    state = us_models.USStateField(db_index=True)
+    district = models.IntegerField(null=True, db_index=True)
+    title = models.CharField(max_length=3, db_index=True)
+    first_name = models.CharField(max_length=256, db_index=True)
+    last_name = models.CharField(max_length=256, db_index=True)
+    contact_form = models.CharField(max_length=1024, null=True, db_index=True)
+    email = models.CharField(max_length=256, db_index=True)
+    contactable = models.BooleanField(default=True, db_index=True)
 
     FIPS_CODES = {
         "AK": "02", "AL": "01", "AR": "05", "AS": "60", "AZ": "04", "CA": "06", "CO": "08", "CT": "09", "DC": "11",
@@ -197,11 +226,11 @@ class Legislator(EmailCongressModel):
 
     @property
     def title_and_full_name(self):
-        return "{0} {1}".format(self.title, self.full_name())
+        return "{0} {1}".format(self.title, self.full_name)
 
     @property
     def full_title_and_full_name(self):
-        return "{0} {1}".format(self.full_title(), self.full_name())
+        return "{0} {1}".format(self.full_title, self.full_name)
 
     @property
     def image_url(self, size='small'):
@@ -295,17 +324,17 @@ class Legislator(EmailCongressModel):
         return Legislator.objects.filter(query).all()
 
 
-class User(EmailCongressModel):
+class User(EmailCongressModel, HasTokenMixin):
 
-    django_user = models.OneToOneField(DjangoUser, on_delete=models.CASCADE)
-    token = GenericRelation(Token)
+    token = GenericRelation(Token, db_index=True)
+    django_user = models.OneToOneField(DjangoUser, on_delete=models.CASCADE, db_index=True)
 
     def __str__(self):
         return self.django_user.email
 
     @property
     def default_info(self):
-        return UserMessageInfo.objects.filter(user=self, default=True).first()
+        return self.usermessageinfo_set.filter(default=True).first()
 
     @property
     def members_of_congress(self):
@@ -316,7 +345,7 @@ class User(EmailCongressModel):
         return self.django_user.email
 
     @property
-    def verification_link(self):
+    def address_change_link(self):
         return self.token.get().link()
 
     def messages(self, **filters):
@@ -346,32 +375,33 @@ class User(EmailCongressModel):
             return 'free'
 
     @staticmethod
-    def new_user_trigger(sender, instance, created, *args, **kwargs):
-        if created:
-            # UserMessageInfo.objects.create(user=instance, default=True)
-            Token.objects.create(content_object=instance)
+    def delete_django_user(sender, instance, **kwargs):
+        try:
+            instance.django_user.delete()
+        except:
+            pass
 
+    @staticmethod
+    def create_new_user(email):
+        try:
+            with transaction.atomic():
+                django_user, created = DjangoUser.objects.get_or_create(username=email, email=email)
+                user, created = User.objects.get_or_create(django_user=django_user)
+                UserMessageInfo.objects.filter(user=user).update(default=False)
+                umi = UserMessageInfo.objects.create(user=user, default=True)
+                return django_user, user, umi
+        except IntegrityError:
+            raise IntegrityError
+            # TODO more robust error handling
 
-
-    """
-
-
-    class Analytics(BaseAnalytics):
-
-        def __init__(self):
-            super(User.Analytics, self).__init__(User)
-
-        def users_with_verified_districts(self):
-            return UserMessageInfo.query.join(User).filter(
-                and_(UserMessageInfo.default.is_(True), not_(UserMessageInfo.district.is_(None)))).count()
-
-    """
-receiver(post_save, sender=User, dispatch_uid='new_user')(User.new_user_trigger)
+receiver(post_delete, sender=User)(User.delete_django_user)
+receiver(pre_delete, sender=User)(User.delete_related_token)
+receiver(post_save, sender=User)(User.create_token_trigger)
 
 
 class UserMessageInfo(EmailCongressModel):
 
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, db_index=True)
     default = models.NullBooleanField(default=False)
 
     PREFIX_CHOICES = (
@@ -414,9 +444,8 @@ class UserMessageInfo(EmailCongressModel):
         return "{0} {1}, {2}, {3} {4}-{5}".format(self.street_address, self.street_address2,
                                                   self.city, self.state, self.zip5, self.zip4)
 
-    def should_update_address_info(self):
-        return self.accept_tos is None or \
-               (datetime.now() - self.accept_tos).days >= settings.CONFIG_DICT['misc']['tos_days_valid']
+    def must_update_address_info(self):
+        return self.accept_tos is None or (datetime.now() - self.accept_tos).days >= settings.DAYS_TOS_VALID
 
     def complete_information(self):
         if self.district is None:
@@ -497,7 +526,9 @@ class UserMessageInfo(EmailCongressModel):
     """
 
 
-class Message(EmailCongressModel):
+class Message(EmailCongressModel, HasTokenMixin):
+
+    token = GenericRelation(Token, db_index=True)
 
     to_originally = JSONField(max_length=8000)
     subject = models.CharField(max_length=500)
@@ -508,6 +539,10 @@ class Message(EmailCongressModel):
 
     def __str__(self):
         return "[{0}] {1}".format(self.id, self.subject[:25])
+
+    @property
+    def to_legislators(self):
+        return self.messagelegislator_set.all()
 
     def get_legislators(self, as_dict=False):
         if as_dict:
@@ -545,7 +580,7 @@ class Message(EmailCongressModel):
         self.save()
 
     def get_send_status(self):
-        target_count = len(self.to_legislators)
+        target_count = self.to_legislators.count()
         sent_count = MessageLegislator.objects.filter(message=self, sent=True).count()
         if target_count == sent_count:
             return 'sent'
@@ -557,7 +592,7 @@ class Message(EmailCongressModel):
     def queue_to_send(self, moc=None):
         if moc is not None:
             self.set_legislators(moc)
-        send_to_phantom_of_the_capitol.delay(msg_id=self.id, force=True)
+        send_to_phantom_of_the_capitol.delay(msg_id=self.id)
 
     def send(self, fresh=False):
         newly_sent = []
@@ -589,6 +624,9 @@ class Message(EmailCongressModel):
             '$ADDRESS_STATE_FULL': str(usps.CODE_TO_STATE.get(umi.state))
         }
 
+receiver(pre_delete, sender=Message)(Message.delete_related_token)
+receiver(post_save, sender=Message)(Message.create_token_trigger)
+
 
 class MessageLegislator(EmailCongressModel):
 
@@ -601,7 +639,7 @@ class MessageLegislator(EmailCongressModel):
         return "{0} -> {1}".format(self.message, self.legislator)
 
     def is_sent(self):
-        return self.sent
+        return self.sent not in [None, False]
 
     def send(self):
         """
@@ -610,7 +648,7 @@ class MessageLegislator(EmailCongressModel):
         @return: instance of this message to the legislator
         @rtype: MessageLegislator
         """
-        if self.is_sent() is not True:
+        if not self.is_sent():
 
             phantom = PhantomOfTheCapitol(endpoint=settings.CONFIG_DICT['api_endpoints']['phantom_base'])
 

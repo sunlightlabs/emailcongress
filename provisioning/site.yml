@@ -4,9 +4,9 @@
   become: yes
   vars:
     configure_user: yes
+    hostname: "{{project_name}}.us"
   roles:
     - role: common-roles/common
-      hostname: "{{hostname}}"
       extra_packages:
         - libpq-dev # Need this for psycopg2
         - memcached

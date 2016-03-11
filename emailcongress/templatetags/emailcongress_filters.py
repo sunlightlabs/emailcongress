@@ -42,3 +42,20 @@ def args(obj, arg):
         obj.__callArg = []
     obj.__callArg += [arg]
     return obj
+
+
+@register.tag
+def remove_whitespace(parser, token):
+    nodelist = parser.parse(('endremove_whitespace',))
+    parser.delete_first_token()
+    return RemoveSpaces(nodelist)
+
+
+class RemoveSpaces(template.Node):
+
+    def __init__(self, nodelist):
+        self.nodelist = nodelist
+
+    def render(self, context):
+        output = self.nodelist.render(context)
+        return ''.join(output.split()) # modify behavior if desired

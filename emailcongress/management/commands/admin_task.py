@@ -7,11 +7,13 @@ import string
 import random
 import json
 
+
 from django.core.management.base import BaseCommand, CommandError
 from django.core import management
 from django.conf import settings
 
 from emailcongress.models import *
+from emailcongress.utils import construct_link
 
 
 def reset_database(prompt=True):
@@ -79,12 +81,12 @@ def setup_test_environment():
 
 def simulate_postmark_message(from_email, to_emails=None, messageid=None):
 
-    if from_email not in settings.SAFE_DEBUG_EMAILS:
-        return from_email + " not in admin emails: " + str(settings.SAFE_DEBUG_EMAILS)
+    if from_email not in settings.POSTMARK_DEBUG_EMAILS:
+        return from_email + " not in admin emails: " + str(settings.POSTMARK_DEBUG_EMAILS)
 
     messageid = uuid.uuid4().hex if messageid is None else messageid
     if to_emails is None:
-        to_emails = [{'Email': 'Rep.Johnboehner@opencongress.org'}]
+        to_emails = [{'Email': 'Rep.Zinke@emailcongress.us'}]
     elif type(to_emails) is str:
         to_emails = [{'Email': to_emails}]
     elif type(to_emails) is list:
@@ -104,10 +106,11 @@ def simulate_postmark_message(from_email, to_emails=None, messageid=None):
         "ToFull": to_emails
     }
     try:
-        req = requests.post(settings.BASE_PROTOCOL + settings.BASE_URL + '/postmark/inbound',
-                            data=json.dumps(params),
-                            headers={"content-type": "text/javascript"})
-        print(req.json())
+        url = construct_link(settings.PROTOCOL, settings.HOSTNAME, '/postmark/inbound')
+        print('Making request to {0}'.format(url))
+        req = requests.post(url, data=json.dumps(params))
+        print(req.text)
+        #print(req.json())
         return req.json()
     except:
         print('Request to postmark inbound url failed')
@@ -140,7 +143,7 @@ class Command(BaseCommand):
     def handle(self, **options):
         try:
             task = options.pop('task')[0]
-            print(task)
+            print('Running {0}'.format(task))
             kwargs = {item[0]: item[1] for item in options['kwargs']}
             self.tasks.get(task)(**kwargs)
         except:

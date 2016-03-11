@@ -1,33 +1,39 @@
-<form id="email-form" class="form" method="POST" action="{{ form.post_action_url }}">
-    <input type="hidden" name="csrf_token" value="{% csrf_token %}" />
+{% load widget_tweaks %}{% load emailcongress_filters %}
 
-    {% if form.errors %}
-        <ul class="form__errorlist">
-            <li><strong>Whoops! Please fix these problems with your form.</strong></li>
-            {% for field in form.ordered_fields_errors %}
-                {% for error in field.errors %}
-                      <li>{{ error|safe }}</li>
-                {% endfor %}
-            {% endfor %}
+{% if form.errors %}
+    <ul class="form__errorlist">
+        <li><strong>Whoops! Please fix these problems with your form.</strong></li>
+        <ul>
+        {% for error in form.non_field_errors %}
+            <li>{{ error|safe }}</li>
+        {% endfor %}
         </ul>
-    {% endif %}
+        {% for field in form %}
+            {% if field.errors and field != '__all__' %}
+              <strong>{{ field.label }}:</strong>
+            {% endif %}
+            <ul>
+            {% for error in field.errors %}
+                <li>{{ error|safe }}</li>
+            {% endfor %}
+            </ul>
+        {% endfor %}
+    </ul>
+{% endif %}
 
-    <h3 class="section__description u-text-light" data-js="update_address-h3" style="display:none">Enter the email you used, and we'll send you a link to update your info.</h3>
-    <h3 class="section__description u-text-light" data-js="remind_reps-h3" style="display:none">Enter the email you used, we'll send you a list of your reps.</h3>
+<h3 class="section__description u-text-light" data-js="update_address-h3" style="display:none">Enter the email you used, and we'll send you a link to update your info.</h3>
+<h3 class="section__description u-text-light" data-js="remind_reps-h3" style="display:none">Enter the email you used, we'll send you a list of your reps.</h3>
 
-    <div class="form__group">
-        <div class="col-sm-8">
-            {% if form.email.errors %}{% set classes="form__input is-invalid" %}{% else %}{% set classes="form__input" %}{% endif %}
-            {{ form.email(class=classes, type="email", placeholder="E-Mail", required="required") }}
-            {{ form.email.label(class="form__label") }}
-        </div>
-        <div class="col-sm-4">
-            <button class="button" type="submit" name="submit_type" value="">
-                Submit
-            </button>
-        </div>
+<div class="form__group">
+    <div class="col-sm-8">
+        {{ form.email|add_error_class:"is-invalid" }}
+        <label for="{{ form.email.id_for_label }}" class="form__label">{{ form.last_name.label }}</label>
     </div>
+    <div class="col-sm-4">
+        <button class="button" type="submit" name="{{ form.submit_type.name }}" value="">
+            Submit
+        </button>
+    </div>
+</div>
 
-    <span class="u-text-light" data-js="email-form-message" style="display:none"></span>
-
-</form>
+<span class="u-text-light" data-js="email-form-message" style="display:none"></span>

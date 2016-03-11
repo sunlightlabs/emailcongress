@@ -32,7 +32,7 @@ class USPSScraper:
                             timeout=5)
 
     @staticmethod
-    def usps_address_lookup(**kwargs):
+    def usps_address_lookup(queue=None, **kwargs):
 
         # parse html
         soup = BeautifulSoup(USPSScraper.usps_request(**kwargs).text, 'html.parser')
@@ -69,6 +69,9 @@ class USPSScraper:
             address['zip4'] = str(results_content.find('span', class_='zip4').text).strip()
         except:
             print("Can't find zip4")
+
+        if queue:
+            queue.put(address)
 
         return address
 

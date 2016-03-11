@@ -1,10 +1,15 @@
+from urllib import parse
+
+
 def bool_eval(v):
     if type(v) is bool:
         return v
     elif type(v) is int:
         return v != 0
-    else:
+    elif type(v) is str:
         return v.lower() in ("yes", "true", "t", "1")
+    else:
+        return v
 
 
 def ordinal(n):
@@ -13,4 +18,7 @@ def ordinal(n):
 
 
 def construct_link(protocol, hostname, path, get_param_dict=None):
-    return protocol + '://' + hostname + path
+    link = protocol + '://' + hostname + path
+    if get_param_dict is not None:
+        link += '?' + parse.urlencode(get_param_dict)
+    return link

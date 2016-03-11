@@ -39,12 +39,17 @@
 
             // Toggle checkbox when repcard is clicked
             $('.repcard').on('click', function (e) {
-                $(this).toggleClass('is-selected');
-                $(this).find('.repcard__checkbox').each(function () {
-                    var checkbox = $(this);
-                    checkbox.prop("checked", !checkbox.prop("checked"));
-                });
-                checkSubmitButton();
+                if (!$(this).hasClass('repcard--horizontal')) {
+                    $(this).toggleClass('is-selected');
+                    $(this).find('.repcard__checkbox').each(function() {
+                        var checkbox = $(this);
+                        checkbox.prop("checked", !checkbox.prop("checked"));
+                    });
+                    checkSubmitButton();
+                }
+                else {
+                    window.location.href = $(this).find('a').first().attr('href');
+                }
             });
 
             // Toggle repcard when checkbox is clicked
@@ -56,4 +61,3 @@
         } catch(errors) {}
     });
 })();
-

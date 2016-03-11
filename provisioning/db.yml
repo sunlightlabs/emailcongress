@@ -2,12 +2,13 @@
 - name: Install Postgres
   hosts: emailcongress-db
   become: yes
+  vars:
+    hostname: "db.{{project_name}}.us"
   roles:
     - role: roles/postgres-apt-ppa
       distro_version_name: trusty
       signing_key: ACCC4CF8
     - role: common-roles/common
-      hostname: "db.{{hostname}}"
     - role: common-roles/postgres
       pgversion: 9.4
       dbuser: "emailcongress"

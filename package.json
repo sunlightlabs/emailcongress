@@ -27,7 +27,8 @@
     "gulp-replace": "^0.5.3",
     "gulp-replace-task": "^0.11.0",
     "gulp-sass": "^2.0.1",
-    "gulp-uglify": "*"
+    "gulp-uglify": "*",
+    "yamljs": "*"
   },
   "dependencies": {
     "gulp-minify-css": "^1.1.1",

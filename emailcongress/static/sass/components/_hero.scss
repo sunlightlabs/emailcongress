@@ -1,11 +1,12 @@
 // Hero component
 
 .hero {
-    background: $green url('/static/images/flag-background.jpg');
+    background: $green url('../images/flag-background.jpg');
     background-size: cover;
     height: 500px;
     position: relative;
     overflow: hidden;
+    width: 100%;
 
     // Layout hero content
     &__content {

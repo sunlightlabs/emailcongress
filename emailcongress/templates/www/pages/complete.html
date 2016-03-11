@@ -1,11 +1,44 @@
 {% extends 'www/base.html' %}
 
 {% block title %}
+    {% spaceless %}
+    {% if msg %}
+    TODO
+    {% elif umi %}
+    Email Congress - Great you're signed up!
+    {% else %}
     Email Congress - Check your email inbox
+    {% endif %}
+    {% endspaceless %}
 {% endblock %}
 
 {% block content %}
 
+    {% if msg %}
+    TODO
+    {% elif umi %}
+    <section class="section">
+        {% include 'icon_check.svg' %}
+        <h2 class="section__heading">Great, you're signed up!</h2>
+        <p class="section__description">
+            You may now message your representatives in Congress via email.
+        </p>
+    </section>
+    <section class="content">
+        <div class="faq__div--main">
+            <h3 class="content__header"><strong>What's next?</strong> You can use
+                <a href="mailto:myreps@emailcongress.us">myreps@emailcongress.us</a> to write to all of your representatives
+                at once. Or send individual emails:
+            </h3>
+
+            {% include 'www/partials/your_reps.html' with user=user %}
+
+            <h3 class="content__header"><strong>Tips for emailing Congress</strong></h3>
+            <hr>
+            {% include 'www/partials/faq_tips.html' %}
+        </div>
+    </section>
+    {% else %}
     <section class="section">
         {% include 'icon_user.svg' %}
         <h2 class="section__heading">Almost done&mdash;check your email!</h2>
@@ -13,5 +46,6 @@
             An email has been sent to you with a verification link. You'll be ready to go as soon as you click on the verification link. If you don't see an email in your inbox then please check your spam folder.
         </p>
     </section>
+    {% endif %}
 
 {% endblock %}

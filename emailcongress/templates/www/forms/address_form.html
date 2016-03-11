@@ -23,12 +23,12 @@
 
 <div class="form__group">
     <div class="col-sm-2">
-        <select name="{{ form.prefix.html_name }}" id="{{ form.prefix.html_name }}" class="form__select {% if not form.cleaned_data.prefix %}is-gray{% endif %}{% if form.prefix.errors %} is-invalid{% endif %}" required="required">
+        <select name="{{ form.prefix.html_name }}" id="{{ form.prefix.auto_id }}" class="form__select {% if not form.data.prefix %}is-gray{% endif %}{% if form.prefix.errors %} is-invalid{% endif %}" required>
         {% for id, name in form.prefix.field.choices %}
-            {% if form.cleaned_data.prefix == name or umi and form.cleaned_data.prefix == umi.prefix %}
+            {% if form.data.prefix == name or umi and form.data.prefix == umi.prefix %}
                 <option selected value="{{ name }}">{{ name }}</option>
             {% elif name == '---------' %}
-                <option disabled {% if not form.cleaned_data.prefix %}selected{% endif %} value="{{ name }}">{{ name }}</option>
+                <option disabled {% if not form.data.prefix %}selected{% endif %} value="{{ name }}">{{ name }}</option>
             {% else %}
                 <option value="{{ name }}">{{ name }}</option>
             {% endif %}
@@ -64,12 +64,12 @@
     </div>
 
     <div class="col-sm-2 {% if not form.errors %}is-hidden is-concealed{% endif %} state-wrap">
-        <select name="{{ form.state.html_name }}" id="{{ form.state.html_name }}" class="form__select {% if not form.cleaned_data.state %}is-gray{% endif %}{% if form.state.errors %} is-invalid{% endif %}" required="required">
+        <select name="{{ form.state.html_name }}" id="{{ form.state.auto_id }}" class="form__select {% if not form.data.state %}is-gray{% endif %}{% if form.state.errors %} is-invalid{% endif %}" required>
         {% for id, name in form.state.field.choices %}
             {% if form.cleaned_data.state == name %}
                 <option selected value="{{ name }}">{{ name }}</option>
             {% elif name == '---------' %}
-                <option disabled {% if not form.cleaned_data.state %}selected{% endif %} value="{{ name }}">{{ name }}</option>
+                <option disabled {% if not form.data.state %}selected{% endif %} value="{{ name }}">{{ name }}</option>
             {% else %}
                 <option value="{{ id }}">{{ id }}</option>
             {% endif %}
@@ -130,4 +130,3 @@
         This service is offered by the Sunlight Foundation and is not affiliated with Congress.
     </p>
 </div>
-

@@ -6,25 +6,25 @@
     </head>
     <body>
         {% block brandingbar %}
-            <div class="branding-bar" data-bb-brandingbar="true" data-bb-property-id="sunlightlabs-awesome"></div>
+        <div class="branding-bar" data-bb-brandingbar="true" data-bb-property-id="sunlightlabs-awesome"></div>
         {% endblock %}
 
         {% block header %}
-            <header class="header">
-                <a href="/"><img class="header__logo" src="{% static 'images/emailcongress-logo.svg' %}" alt="EmailCongress Logo"></a>
-            </header>
+        <header class="header">
+            <a href="/"><img class="header__logo" src="{% static 'images/emailcongress-logo.svg' %}" alt="EmailCongress Logo"></a>
+        </header>
         {% endblock %}
 
         {% block main %}
-            <main class="main">
-                {% block content %}{% endblock %}
-            </main>
+        <main class="main">
+            {% block content %}{% endblock %}
+        </main>
         {% endblock %}
 
         {% block footer %}
-            <footer class="footer">
-                {% include 'www/_footer.html' %}
-            </footer>
+        <footer class="footer">
+            {% include 'www/_footer.html' %}
+        </footer>
         {% endblock %}
         <!-- CDN Javascript -->
         <script type="text/javascript" src="https://code.jquery.com/jquery-1.11.2.min.js"></script>

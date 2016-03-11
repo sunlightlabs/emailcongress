@@ -30,4 +30,3 @@ markdown
 uwsgi
 uwsgidecorators
 django-widget-tweaks
-memcache_toolbar

@@ -11,6 +11,7 @@ class AbstractAdmin(admin.ModelAdmin):
     def get_list_display(self, request):
         return self.list_display + ('created_at', 'updated_at')
 
+
 class UserAdmin(AbstractAdmin):
 
     list_display = ('django_user', )
@@ -32,8 +33,9 @@ class MessageAdmin(AbstractAdmin):
     list_display = ('id', 'subject', 'msgbody', 'email_uid', 'status', 'user_message_info')
 
 
-class UserMessageInfoAdmin(admin.ModelAdmin):
-    pass
+class UserMessageInfoAdmin(AbstractAdmin):
+
+    list_display = ('id', 'user', 'prefix', 'first_name', 'last_name', 'zip5', 'state', 'district')
 
 
 class MessageLegislatorAdmin(admin.ModelAdmin):

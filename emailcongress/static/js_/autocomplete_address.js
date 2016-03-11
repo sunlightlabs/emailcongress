@@ -40,30 +40,28 @@
                 contentType: 'application/json',
                 data: JSON.stringify({'street_address': street_address, 'zip5': zip5.substring(0,5)}),
                 dataType: 'json',
-                timeout: 3000,
+                timeout: 6500,
                 success: function(result) {
                     if ('error' in result) {
                         zipcode_css_switch(true);
                         $no_zip4_error.show();
-                        $autofill__group.addClass('has-error');
-                        $submit.prop('disabled', false);
-                        $submit.text('Submit');
+                        $autofill__group.addClass('is-invalid');
                     } else {
                         autocomplete_address_values(result['city'], result['state'], result['zip4'], result['zip5']);
-                        $submit.prop('disabled', false);
-                        $submit.text('Submit');
-                        $autofill__group.removeClass('has-error');
+                        $autofill__group.removeClass('is-invalid');
                     }
                 },
                 error: function(jqXHR, textStatus, errorThrown) {
                     if(textStatus==="timeout") {
                         zipcode_css_switch(true);
                         $no_zip4_error.show();
-                        $autofill__group.addClass('has-error');
+                        $autofill__group.addClass('is-invalid');
                     }
                 },
                 complete: function(jqXHR, textStatus) {
                     typeWatch_lock = false;
+                    $submit.prop('disabled', false);
+                    $submit.text('Submit');
                 }
             });
         }

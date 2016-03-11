@@ -1,49 +1,79 @@
-from postmark import PMMail
 from django.conf import settings
 from django.template.loader import render_to_string
 
+from postmark import PMMail
+
 
 class NoReply(PMMail):
+
+    HTML_BODY_TEMPLATE_DIR = 'emails/html_body/'
+    TEXT_BODY_TEMPLATE_DIR = 'emails/text_body/'
 
     def __init__(self, django_user, **kwargs):
         super().__init__(**kwargs)
         self.user = django_user.user
         self.to = django_user.email
 
-    def _message_headers(self, msg):
-        self.custom_headers = {'In-Reply-To': msg.email_uid,
-                               'References': msg.email_uid}
-
     def send(self, test=False):
-        if not settings.DEBUG or (settings.DEBUG and self.to in settings.DEBUG_EMAILS):
+
+        if not settings.DEBUG or (settings.DEBUG and self.to in settings.POSTMARK_DEBUG_EMAILS):
             print('Sending live email to ' + self.to)
             return super().send(test=test)
         else:
-            print('Debug mode and user not in list of admin emails')
+            print('Debug mode and/or {0} not in list of admin emails'.format(self.to))
             return super().send(test=True)
 
-    def token_reset(self):
-        """
+            # TODO robust error handling
 
+    def _set_custom_headers_from_msg(self, msg):
         """
-        self.subject = "You've requested to change your address information on  Email Congress."
-        self.html_body = render_to_string("emails/token_reset.html",
-                                          context={'verification_link': self.user.verification_link(),
-                                                   'user': self.user})
+        Sets custom headers from message object
+
+        @param msg: an instance of a message
+        @type msg: emailcongress.models.Message
+        @return: the instance of NoReply
+        @rtype: NoReply
+        """
+        self._set_custom_headers({'In-Reply-To': msg.email_uid, 'References': msg.email_uid})
         return self
+
+    #  ___ __  __   _   ___ _      __  __ ___ _____ _  _  ___  ___  ___  #
+    # | __|  \/  | /_\ |_ _| |    |  \/  | __|_   _| || |/ _ \|   \/ __| #
+    # | _|| |\/| |/ _ \ | || |__  | |\/| | _|  | | | __ | (_) | |) \__ \ #
+    # |___|_|  |_/_/ \_\___|____| |_|  |_|___| |_| |_||_|\___/|___/|___/ #
 
     def signup_confirm(self):
         """
-        If user signs up through index page then they receive a confirmation email with their change address link
-        to verify they are indeed the owner of the email.
+        If user signs up through index page then they receive a confirmation email
+        with their change address link to verify they are indeed the owner of the email.
         """
         self.subject = "Confirm your Email Congress account."
-        self.html_body = render_to_string("emails/html_body/signup_confirm.html",
+        self.html_body = render_to_string('emails/html_body/signup_confirm.html',
+                                          context={'user': self.user,
+                                                   'verification_link': self.user.verification_link})
+
+        return self
+
+    def address_change_request(self):
+        """
+        User requests to change their address
+        """
+        self.subject = "You've requested to change your address information on Email Congress."
+        self.html_body = render_to_string("emails/html_body/address_change_request.html",
                                           context={'user': self.user,
                                                    'verification_link': self.user.verification_link})
         return self
 
-    def validate_user(self, msg):
+    def remind_reps(self):
+
+        self.subject = "Reminder of your members of Congress"
+        self.html_body = render_to_string('emails/html_body/remind_reps.html',
+                                          context={'user': self.user,
+                                                   'link': self.user.verification_link,
+                                                   'members_of_congress': self.user.members_of_congress})
+        return self
+
+    def email_confirm(self, msg):
         """
         Handles the case of a first time user or a user who needs to renew their contact information.
 
@@ -51,10 +81,10 @@ class NoReply(PMMail):
         @type msg: emailcongress.models.Message
         """
         self.subject = 'Re: ' + msg.subject
-        self.html_body = render_to_string("emails/validate_user.html",
-                                          context={'verification_link': msg.verification_link(),
-                                                   'user': self.user})
-        self._message_headers(msg)
+        self.html_body = render_to_string('emails/html_body/email_confirm.html',
+                                          context={'user': self.user,
+                                                   'verification_link': msg.verification_link})
+        self._set_custom_headers_from_msg(msg)
         return self
 
     def signup_success(self, msg):
@@ -68,7 +98,7 @@ class NoReply(PMMail):
                                           context={'link': self.user.verification_link(),
                                                    'user': self.user,
                                                    'moc': self.user.default_info.members_of_congress})
-        self._message_headers(msg)
+        self._set_custom_headers_from_msg(msg)
         return self
 
     def reconfirm_info(self, msg):
@@ -77,7 +107,7 @@ class NoReply(PMMail):
         self.html_body = render_to_string("emails/revalidate_user.html",
                                           context={'verification_link': msg.verification_link(),
                                                    'user': self.user})
-        self._message_headers(msg)
+        self._set_custom_headers_from_msg(msg)
         return self
 
     def over_rate_limit(self, msg):
@@ -86,16 +116,16 @@ class NoReply(PMMail):
         self.html_body = render_to_string("emails/over_rate_limit.html",
                                           context={'user': self.user,
                                                    'msg': msg})
-        self._message_headers(msg)
+        self._set_custom_headers_from_msg(msg)
         return self
 
     def message_queued(self, legs, msg):
 
         self.subject = "Your email is now on its way!"
-        self.html_body = render_to_string("emails/message_queued.html",
-                                          context={'legislators': legs,
+        self.html_body = render_to_string("emails/html_body/message_queued.html",
+                                          context={'legislators': [leg.full_title_and_full_name for leg in legs],
                                                    'user': self.user})
-        self._message_headers(msg)
+        self._set_custom_headers_from_msg(msg)
         return self
 
     def message_undeliverable(self, leg_buckets, msg):
@@ -104,7 +134,7 @@ class NoReply(PMMail):
         self.html_body = render_to_string("emails/message_undeliverable.html",
                                           context={'leg_buckets': leg_buckets,
                                                    'user': self.user})
-        self._message_headers(msg)
+        self._set_custom_headers_from_msg(msg)
         return self
 
     def message_receipt(self, legs, msg):
@@ -133,7 +163,7 @@ class NoReply(PMMail):
                                                    'msg': msg,
                                                    'user': self.user,
                                                    'rls': rls})
-        self._message_headers(msg)
+        self._set_custom_headers_from_msg(msg)
         return self
 
     def send_status(self, msg_legs, msg):
@@ -161,7 +191,7 @@ class NoReply(PMMail):
         self.html_body = render_to_string("emails/send_status.html",
                                           context={'legislators': send_statuses,
                                                    'user': self.user})
-        self._message_headers(msg)
+        self._set_custom_headers_from_msg(msg)
         return self
 
     def successfully_reset_token(self):
@@ -181,15 +211,6 @@ class NoReply(PMMail):
 
         self.subject = 'Your Email Congress contact information has changed.'
         self.html_body = render_to_string('emails/address_changed.html',
-                                          context={'link': self.user.verification_link(),
-                                                   'user': self.user,
-                                                   'moc': self.user.default_info.members_of_congress})
-        return self
-
-    def remind_reps(self):
-
-        self.subject = "Reminder of your members of Congress"
-        self.html_body = render_to_string('emails/remind_reps.html',
                                           context={'link': self.user.verification_link(),
                                                    'user': self.user,
                                                    'moc': self.user.default_info.members_of_congress})

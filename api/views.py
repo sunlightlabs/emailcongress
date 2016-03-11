@@ -63,7 +63,7 @@ class MessageViewSet(viewsets.ModelViewSet):
     serializer_class = MessageSerializer
 
     @staticmethod
-    def process_inbound_message(user, umi, msg, send_email=True):
+    def process_inbound_message(django_user, umi, msg, test=False):
         try:
             msg.update_status()
 
@@ -71,13 +71,13 @@ class MessageViewSet(viewsets.ModelViewSet):
             msg.set_legislators(legs['contactable'])
 
             if msg.has_legislators() and msg.is_free_to_send():
-                emailer.NoReply(user).message_queued(legs['contactable'], msg).send(test=send_email)
+                emailer.NoReply(django_user).message_queued(legs['contactable'], msg).send(test=test)
                 msg.queue_to_send()
             elif not msg.is_free_to_send():
-                emailer.NoReply(user).over_rate_limit(msg).send()
+                emailer.NoReply(django_user).over_rate_limit(msg).send(test=test)
 
             if legs['does_not_represent'] or legs['non_existent']:
-                emailer.NoReply(user).message_undeliverable(legs, msg).send()
+                emailer.NoReply(django_user).message_undeliverable(legs, msg).send(test=test)
             return True
         except:
             return traceback.format_exc()
@@ -86,8 +86,8 @@ class MessageViewSet(viewsets.ModelViewSet):
     def send(self, request):
         try:
             params = request.data
-            user = request.user.user  # first user in the chain is the django auth user
-            umi = user.default_info
+            django_user = request.user #.user  # first user in the chain is the django auth user
+            umi = django_user.user.default_info
 
             if 'send_date' not in params:
                 send_date = datetime.now()
@@ -106,7 +106,7 @@ class MessageViewSet(viewsets.ModelViewSet):
                 user_message_info=umi
             )
 
-            sent = self.process_inbound_message(user, umi, new_msg, send_email=True)
+            sent = self.process_inbound_message(django_user, umi, new_msg, False)
             return Response({'data': self.serializer_class(new_msg).data, 'status': sent})
         except:
             raise exceptions.APIException('Error while trying to submit email.')

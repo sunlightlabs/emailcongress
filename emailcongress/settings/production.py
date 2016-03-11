@@ -21,3 +21,5 @@ SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 
 PROTOCOL = CONFIG_DICT.get('protocol', 'https')
+
+SECRET_KEY = CONFIG_DICT['django']['secret-key']

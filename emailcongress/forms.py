@@ -1,13 +1,33 @@
 import re
 import datetime
 
-from django.forms import ValidationError, ModelForm, TextInput, CharField, ChoiceField, EmailField, EmailInput
+from django.forms import Form, ValidationError, ModelForm, TextInput, CharField, ChoiceField, EmailField, EmailInput
 from django.template.loader import render_to_string
 from django.core import validators
 from django.forms.widgets import ChoiceInput
 from django.forms.utils import ErrorList
+from django.db import transaction
 
 from emailcongress.models import UserMessageInfo, DjangoUser, User
+
+from django import forms
+
+
+class EmailForm(Form):
+
+    email = EmailField(required=True,
+                       widget=EmailInput(
+                           attrs={'class': 'form__input',
+                                  'placeholder': 'E-mail',
+                                  'required': ''}),
+                       error_messages={'invalid': 'Please enter a valid email address.'})
+
+    submit_type = ChoiceField(required=True,
+                              choices=(('update_address', 'update_address'),
+                                       ('remind_reps', 'remind_reps')))
+
+    def __str__(self):
+        return render_to_string('www/forms/email_form.html', context={'form': self})
 
 
 class UserMessageInfoForm(ModelForm):
@@ -20,7 +40,8 @@ class UserMessageInfoForm(ModelForm):
                            widget=TextInput(
                                attrs={'class': 'form__input',
                                       'placeholder': 'First Name',
-                                      'pattern': "[A-Za-z\s]{1,20}"}),
+                                      'pattern': "[A-Za-z\s]{1,20}",
+                                      'required': ''}),
                            validators=[validators.RegexValidator(regex=r'[A-Za-z\s]{1,20}',
                                             message=name_error_message),
                                        validators.MaxLengthValidator(20),
@@ -31,7 +52,8 @@ class UserMessageInfoForm(ModelForm):
                            widget=TextInput(
                                attrs={'class': 'form__input',
                                       'placeholder': 'Last Name',
-                                      'pattern': "[A-Za-z\s]{1,20}"}),
+                                      'pattern': "[A-Za-z\s]{1,20}",
+                                      'required': ''}),
                            validators=[validators.RegexValidator(regex=r'[A-Za-z\s]{1,20}',
                                             message=name_error_message),
                                       validators.MinLengthValidator(1),
@@ -40,8 +62,9 @@ class UserMessageInfoForm(ModelForm):
 
     street_address = CharField(required=True,
                                widget=TextInput(
-                                   attrs={'class': 'form__input',
-                                          'placeholder': 'Street Address'}),
+                                   attrs={'class': 'form__input autofill__group',
+                                          'placeholder': 'Street Address',
+                                          'required': ''}),
                                validators=[validators.MinLengthValidator(1),
                                            validators.MaxLengthValidator(256)]
                                )
@@ -56,16 +79,18 @@ class UserMessageInfoForm(ModelForm):
 
     city = CharField(required=True,
                        widget=TextInput(
-                           attrs={'class': 'form__input',
-                                  'placeholder': 'City'}),
+                           attrs={'class': 'form__input autofill__group',
+                                  'placeholder': 'City',
+                                  'required': ''}),
                        validators=[validators.MinLengthValidator(1),
                                    validators.MaxLengthValidator(256)]
                        )
 
     zip = CharField(required=True,
                      widget=TextInput(
-                           attrs={'class': 'form__input--masked',
-                                  'placeholder': 'Zipcode'}),
+                           attrs={'class': 'form__input--masked autofill__group',
+                                  'placeholder': 'Zipcode',
+                                  'required': ''}),
                        validators=[validators.RegexValidator(regex=r'^\d{5}-\d{4}$',
                                          message='Zipcode and Zip+4 must have form XXXXX-XXXX. Lookup up <a target="_blank" href="https://tools.usps.com/go/ZipLookupAction!input.action">here</a>')]
                        )
@@ -73,7 +98,8 @@ class UserMessageInfoForm(ModelForm):
     phone_number = CharField(required=True,
                       widget=TextInput(
                           attrs={'class': 'form__input--masked',
-                                 'placeholder': 'Phone Number',}),
+                                 'placeholder': 'Phone Number',
+                                 'required': ''}),
                       validators=[validators.RegexValidator(regex=r'^\([0-9]{3}\) [0-9]{3}-[0-9]{4}$',
                                         message='Please enter a phone number with format (XXX) XXX-XXXX')]
                       )
@@ -81,7 +107,8 @@ class UserMessageInfoForm(ModelForm):
     email = EmailField(required=True,
                   widget=EmailInput(
                       attrs={'class': 'form__input',
-                             'placeholder': 'E-mail'}),
+                             'placeholder': 'E-mail',
+                             'required': ''}),
                   error_messages={'invalid': 'Please enter a valid email address.'}
                   )
 
@@ -93,10 +120,28 @@ class UserMessageInfoForm(ModelForm):
     def __str__(self):
         return render_to_string('www/forms/address_form.html', context={'form': self})
 
+    def disable_email_input(self):
+        self['email'].field.widget.attrs['disabled'] = True
+
+    def is_valid_with_original_email(self, email):
+        if email != self.data.get('email'):
+            error_msg = "E-mail must match the address that you originally sent your message from. Our records " \
+                        "indicate that you sent your message from {0} but you've inputted {1} in this form. Please " \
+                        "change it back to {0} if you wish to proceed or send your message from from " \
+                        "{1}.".format(email, self.data.get('email'))
+            self.add_error('email', ValidationError(error_msg))
+        return self.is_valid()
+
     def clean_email(self):
         email = self.cleaned_data.get('email')
-        if DjangoUser.objects.filter(email=email).exists():
-            raise ValidationError("Email already exists") # TODO handle case where user previously signed up and forgot or malicious signups
+        try:
+            if DjangoUser.objects.get(email=email).user.default_info.accept_tos is not None:
+                error_msg = "The email you entered already exists in our system. " \
+                            "Click here if you wish to update your address information or be reminded " \
+                            "of your members of congress."
+                self.add_error('email', ValidationError(error_msg))
+        except:
+            pass
         return email
 
     def clean_phone_number(self):
@@ -132,14 +177,13 @@ class UserMessageInfoForm(ModelForm):
             self.add_error(None, ValidationError(error_msg))
             # TODO robust error logging
 
+    @transaction.atomic
     def save(self, commit=True):
-        django_user = DjangoUser.objects.create_user(username=self.data['email'],
-                                                     email=self.data['email'],
-                                                     password='test')
+        django_user, created = DjangoUser.objects.get_or_create(username=self.data['email'], email=self.data['email'])
         user, created = User.objects.get_or_create(django_user=django_user)
-
+        user.usermessageinfo_set.update(default=False)
         self.instance.user = user
         self.instance.default = True
-
         super().save(commit=commit)
-        return django_user
+        return user.django_user
+
