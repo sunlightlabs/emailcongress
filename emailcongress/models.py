@@ -13,6 +13,7 @@ from django.contrib.auth.models import User as DjangoUser
 from django.core.urlresolvers import reverse
 from django.conf import settings
 from django.db import IntegrityError, transaction
+from django.utils import timezone
 
 from jsonfield import JSONField
 from localflavor.us import models as us_models
@@ -70,6 +71,11 @@ class EmailCongressModel(models.Model):
 
 
 class Token(EmailCongressModel):
+
+    class Meta:
+        permissions = (
+            ("api", "Can access the API."),
+        )
 
     key = models.CharField(max_length=64, unique=True, null=True, db_index=True)
     object_id = models.PositiveIntegerField(db_index=True)
@@ -167,6 +173,11 @@ class HasTokenMixin(object):
         ctype = ContentType.objects.get_for_model(self)
         return Token.objects.get(content_type=ctype, object_id=self.pk).link()
 
+    @property
+    def token_key(self):
+        ctype = ContentType.objects.get_for_model(self)
+        return Token.objects.get(content_type=ctype, object_id=self.pk).key
+
     @staticmethod
     def create_token_trigger(sender, instance, created, *args, **kwargs):
         if created:
@@ -247,8 +258,14 @@ class Legislator(EmailCongressModel):
 
     @staticmethod
     def humanized_district(state, district):
-        return (utils.ordinal(int(district)) if int(district) > 0 else 'At-Large') + \
-               ' Congressional district of ' + usps.CODE_TO_STATE.get(state)
+        d = '{0} Congressional district'.format(utils.ordinal(district) if int(district) > 0 else 'At-Large')
+        if state:
+            d += ' of {0}'.format(usps.CODE_TO_STATE.get(state))
+        return d
+
+    @property
+    def humanized_constituency(self):
+        return Legislator.humanized_district(self.state, self.district)
 
     @staticmethod
     def humanized_state(state):
@@ -367,7 +384,7 @@ class User(EmailCongressModel, HasTokenMixin):
         @return: string to represent whether to allow user to send more messages
         @rtype: str
         """
-        count = self.messages().filter(created_at__gte=(datetime.now() -
+        count = self.messages().filter(created_at__gte=(timezone.now() -
                                        timedelta(hours=settings.CONFIG_DICT['email']['interval_hour_max']))).count()
         if count > settings.CONFIG_DICT['email']['max_per_interval'] and not force_allow:
             return 'block'
@@ -382,13 +399,16 @@ class User(EmailCongressModel, HasTokenMixin):
             pass
 
     @staticmethod
-    def create_new_user(email):
+    def get_or_create_user_from_email(email):
         try:
             with transaction.atomic():
                 django_user, created = DjangoUser.objects.get_or_create(username=email, email=email)
                 user, created = User.objects.get_or_create(django_user=django_user)
-                UserMessageInfo.objects.filter(user=user).update(default=False)
-                umi = UserMessageInfo.objects.create(user=user, default=True)
+                if user.default_info and user.default_info.accept_tos:
+                    umi = user.default_info
+                else:
+                    UserMessageInfo.objects.filter(user=user).update(default=False)
+                    umi = UserMessageInfo.objects.create(user=user, default=True)
                 return django_user, user, umi
         except IntegrityError:
             raise IntegrityError
@@ -435,21 +455,34 @@ class UserMessageInfo(EmailCongressModel):
     def members_of_congress(self):
         if self.district is None:
             self.determine_district()
-        return Legislator.members_for_state_and_district(self.state, self.district)
+        return Legislator.members_for_state_and_district(self.state, self.district).order_by('title')
+
+    @property
+    def humanized_district(self):
+        return Legislator.humanized_district(self.state, self.district)
+
+    @property
+    def humanized_district_no_state(self):
+        return Legislator.humanized_district(None, self.district)
+
+    @property
+    def humanized_state(self):
+        return Legislator.humanized_state(self.state)
 
     def confirm_accept_tos(self):
-        self.update(accept_tos=datetime.now())
+        self.accept_tos = timezone.now()
+        self.save()
 
     def mailing_address(self):
         return "{0} {1}, {2}, {3} {4}-{5}".format(self.street_address, self.street_address2,
                                                   self.city, self.state, self.zip5, self.zip4)
 
     def must_update_address_info(self):
-        return self.accept_tos is None or (datetime.now() - self.accept_tos).days >= settings.DAYS_TOS_VALID
+        return self.accept_tos is None or (timezone.now() - self.accept_tos).days >= settings.DAYS_TOS_VALID
 
     def complete_information(self):
         if self.district is None:
-            self.determine_district(force=True)
+            self.determine_district()
         if not self.zip4:
             self.zip4_lookup(force=True)
 
@@ -467,11 +500,7 @@ class UserMessageInfo(EmailCongressModel):
             except:
                 raise
 
-    def determine_district(self, force=False, save=False):
-
-        if not force and self.district is not None:
-            return self.district
-
+    def determine_district(self, save=False):
         data = determine_district_service.determine_district(zip5=self.zip5)
         if data is None:
             lat, lng = self.geolocate_address()
@@ -485,12 +514,6 @@ class UserMessageInfo(EmailCongressModel):
         except:
             return None # TODO robust error handling
 
-    def humanized_district(self):
-        return Legislator.humanized_district(self.state, self.district)
-
-    def humanized_state(self):
-        return Legislator.humanized_state(self.state)
-
     def zip4_lookup(self, force=False):
         if force or not self.zip4:
             try:
@@ -502,28 +525,16 @@ class UserMessageInfo(EmailCongressModel):
     def get_district_geojson_url(self):
         return Legislator.get_district_geojson_url(self.state, self.district)
 
-    """
-    def __eq__(self, other):
-        if isinstance(other, self.__class__):
-            return self.comparable_attributes() == other.comparable_attributes()
-        return False
+    def clone_instance_for_address_update(self):
+        """
+        By setting pk to None then saving will create a new record.
 
-    def comparable_attributes(self):
-        return {key: value for key, value in self.__dict__ if key in self.user_input_columns()}
-
-    @classmethod
-    def first_or_create(cls, user_id, created_at=datetime.now, **kwargs):
-        user = User.query.filter_by(id=user_id).first()
-        if user is not None:
-            sanitize_keys(kwargs, cls.user_input_columns())
-            umi = UserMessageInfo.query.filter_by(**kwargs).first()
-            if umi is not None: return umi
-            else:
-                created_at = parser.parse(created_at) if type(created_at) is str else created_at().replace(tzinfo=pytz.timezone('US/Eastern'))
-                umi = UserMessageInfo(user_id=user.id, created_at=created_at, **kwargs)
-                db_add_and_commit(umi)
-                return umi
-    """
+        @return: None
+        @rtype: None
+        """
+        self.pk = None
+        self.updating = True
+        self.accept_tos = None
 
 
 class Message(EmailCongressModel, HasTokenMixin):
@@ -544,14 +555,19 @@ class Message(EmailCongressModel, HasTokenMixin):
     def to_legislators(self):
         return self.messagelegislator_set.all()
 
+    @property
+    def has_legislators(self):
+        return self.messagelegislator_set.count() > 0
+
+    @property
+    def legislators(self):
+        return self.get_legislators()
+
     def get_legislators(self, as_dict=False):
         if as_dict:
             return {leg.legislator.bioguide_id: leg for leg in self.messagelegislator_set.all()}
         else:
-            return Legislator.objects.filter(id__in=self.messagelegislator_set.all().values_list('id', flat=True))
-
-    def has_legislators(self):
-        return self.get_legislators()
+            return [ml.legislator for ml in self.messagelegislator_set.all()]
 
     def generate_message_legislators(self, legislators):
         if type(legislators) is not list:
@@ -559,6 +575,7 @@ class Message(EmailCongressModel, HasTokenMixin):
         return [MessageLegislator.objects.get_or_create(message_id=self.id, legislator=leg)[0] for leg in legislators]
 
     def set_legislators(self, legislators):
+        MessageLegislator.objects.filter(message_id=self.id).delete()
         self.messagelegislator_set.set(self.generate_message_legislators(legislators))
 
     def add_legislators(self, legislators):
@@ -632,7 +649,7 @@ class MessageLegislator(EmailCongressModel):
 
     send_status = JSONField(max_length=8000, default={'status': 'unsent'})
     sent = models.NullBooleanField(default=None)
-    message = models.ForeignKey(Message)
+    message = models.ForeignKey(Message, on_delete=models.CASCADE)
     legislator = models.ForeignKey(Legislator)
 
     def __str__(self):

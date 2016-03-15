@@ -7,36 +7,26 @@
 {% block content %}
 
     <section class="section">
-    {% if context.signup %}
-        {% include 'icon_user.svg' %}
-        <h2 class="section__heading">Almost done&mdash;check your email!</h2>
-        <p class="section__description">
-            An email has been sent to you with a verification link.
-            You'll be ready to go as soon as you click on the verification link.
-            If you don't see an email in your inbox then please check your spam folder.
-        </p>
-    {% elif context.user %}
-        {% include 'icon_user.svg' %}
-        <h2 class="section__heading">Let's get your information updated.</h2>
-        <p class="section__description">
-            This helps us ensure that we're delivering your messages to the right representatives.
-        </p>
-    {% else %}
+    {% if msg %}
         {% include 'machine.svg' %}
         <h2 class="section__heading">Let's get your message to Congress.</h2>
         <p class="section__description">
             Contacting Congress should be as easy as email. We just need some info to make that happen.
         </p>
+    {% else %}
+        {% include 'icon_user.svg' %}
+        <h2 class="section__heading">Let's get your information updated.</h2>
+        <p class="section__description">
+            This helps us ensure that we're delivering your messages to the right representatives.
+        </p>
     {% endif %}
     </section>
 
-    {% if not context.signup %}
-        <section class="content">
-            <form id="address-form" class="form" method="POST" action="">
-                {% csrf_token %}
-                {% include 'www/forms/address_form.html' with form=form %}
-            </form>
-        </section>
-    {% endif %}
+    <section class="content">
+        <form id="address-form" class="form" method="POST" action="">
+            {% csrf_token %}
+            {% include 'www/forms/address_form.html' with form=form %}
+        </form>
+    </section>
 
 {% endblock %}

@@ -32,17 +32,19 @@
                 type: 'POST',
                 url: URL_PREFIX + '/',
                 data: $(this).serialize()+'&submit_type='+$email_form_submit.attr('value'),
-                dataType: 'text',
+                dataType: 'json',
                 timeout: 3000,
                 success: function (result) {
-                    $email_form_message.text(result);
-                    $email_form_message.show();
+                    $email_form_message.text(result['email']);
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
-
+                    console.log(textStatus);
+                    console.log(errorThrown);
+                    console.log(jqXHR);
+                    $email_form_message.text(jqXHR['responseJSON']['email']);
                 },
                 complete: function (jqXHR, textStatus) {
-
+                    $email_form_message.show();
                 }
             });
         })

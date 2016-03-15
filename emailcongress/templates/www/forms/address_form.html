@@ -23,9 +23,9 @@
 
 <div class="form__group">
     <div class="col-sm-2">
-        <select name="{{ form.prefix.html_name }}" id="{{ form.prefix.auto_id }}" class="form__select {% if not form.data.prefix %}is-gray{% endif %}{% if form.prefix.errors %} is-invalid{% endif %}" required>
+        <select name="{{ form.prefix.html_name }}" id="{{ form.prefix.auto_id }}" class="form__select {% if not form.prefix.value %}is-gray{% endif %}{% if form.prefix.errors %} is-invalid{% endif %}" required>
         {% for id, name in form.prefix.field.choices %}
-            {% if form.data.prefix == name or umi and form.data.prefix == umi.prefix %}
+            {% if form.prefix.value == name %}
                 <option selected value="{{ name }}">{{ name }}</option>
             {% elif name == '---------' %}
                 <option disabled {% if not form.data.prefix %}selected{% endif %} value="{{ name }}">{{ name }}</option>
@@ -64,10 +64,10 @@
     </div>
 
     <div class="col-sm-2 {% if not form.errors %}is-hidden is-concealed{% endif %} state-wrap">
-        <select name="{{ form.state.html_name }}" id="{{ form.state.auto_id }}" class="form__select {% if not form.data.state %}is-gray{% endif %}{% if form.state.errors %} is-invalid{% endif %}" required>
+        <select name="{{ form.state.html_name }}" id="{{ form.state.auto_id }}" class="form__select {% if not form.state.value %}is-gray{% endif %}{% if form.state.errors %} is-invalid{% endif %}" required>
         {% for id, name in form.state.field.choices %}
-            {% if form.cleaned_data.state == name %}
-                <option selected value="{{ name }}">{{ name }}</option>
+            {% if form.state.value == id %}
+                <option selected value="{{ id }}">{{ id }}</option>
             {% elif name == '---------' %}
                 <option disabled {% if not form.data.state %}selected{% endif %} value="{{ name }}">{{ name }}</option>
             {% else %}
@@ -95,15 +95,15 @@
 </div>
 
 <div class="form__group">
-    <div class="{% if not umi %}col-sm-4{% else %}col-sm-12{% endif %}">
+    <div class="{% if not umi %}col-sm-4 {% else %}col-sm-12{% endif %}">
         {{ form.phone_number|add_error_class:"is-invalid" }}
         <label for="{{ form.phone_number.id_for_label }}" class="form__label">{{ form.phone_number.label }}</label>
      </div>
-    {% if not umi %}
+   {% if not umi %}
     <div class="col-sm-8">
         {{ form.email|add_error_class:"is-invalid" }}
         <label for="{{ form.email.id_for_label }}" class="form__label">{{ form.email.label }}</label>
-     </div>
+    </div>
     {% endif %}
 </div>
 

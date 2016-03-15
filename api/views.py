@@ -67,17 +67,17 @@ class MessageViewSet(viewsets.ModelViewSet):
         try:
             msg.update_status()
 
-            legs = models.Legislator.get_leg_buckets_from_emails(umi.members_of_congress, msg.to_originally)
-            msg.set_legislators(legs['contactable'])
+            leg_buckets = models.Legislator.get_leg_buckets_from_emails(umi.members_of_congress, msg.to_originally)
+            msg.set_legislators(leg_buckets['contactable'])
 
             if msg.has_legislators() and msg.is_free_to_send():
-                emailer.NoReply(django_user).message_queued(legs['contactable'], msg).send(test=test)
                 msg.queue_to_send()
+                emailer.NoReply(django_user).message_queued(leg_buckets['contactable'], msg).send(test=test)
             elif not msg.is_free_to_send():
                 emailer.NoReply(django_user).over_rate_limit(msg).send(test=test)
+            elif leg_buckets['does_not_represent'] or leg_buckets['non_existent']:
+                emailer.NoReply(django_user).message_undeliverable(leg_buckets, msg).send(test=test)
 
-            if legs['does_not_represent'] or legs['non_existent']:
-                emailer.NoReply(django_user).message_undeliverable(legs, msg).send(test=test)
             return True
         except:
             return traceback.format_exc()
@@ -86,7 +86,7 @@ class MessageViewSet(viewsets.ModelViewSet):
     def send(self, request):
         try:
             params = request.data
-            django_user = request.user #.user  # first user in the chain is the django auth user
+            django_user = request.user
             umi = django_user.user.default_info
 
             if 'send_date' not in params:

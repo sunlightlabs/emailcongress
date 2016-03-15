@@ -30,3 +30,5 @@ markdown
 uwsgi
 uwsgidecorators
 django-widget-tweaks
+raven
+pytz

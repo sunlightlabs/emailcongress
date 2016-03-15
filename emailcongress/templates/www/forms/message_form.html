@@ -1,0 +1,15 @@
+{% include 'www/partials/your_reps.html' with form=form user=form.instance.user_message_info.user legs_buckets=form.legs_buckets %}
+
+<h3 class="content__header"><strong>Now look over your email message</strong></h3>
+
+<div class="form__group">
+    <div class="col-sm-12 form__readonly">
+        <p><strong>{{ form.instance.subject }}</strong></p>
+        <p>{{ form.instance.msgbody }}</p>
+    </div>
+</div>
+
+<button class="button__primary" type="submit" value="send">
+    <span class="button__text">Send this message now</span>
+    <span class="button__text--disabled">Select at least one legislator first</span>
+</button>

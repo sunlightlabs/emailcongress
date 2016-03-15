@@ -1,7 +1,10 @@
 from django.conf import settings
 from django.template.loader import render_to_string
+from django.core.urlresolvers import reverse
 
 from postmark import PMMail
+
+from emailcongress import utils
 
 
 class NoReply(PMMail):
@@ -13,6 +16,9 @@ class NoReply(PMMail):
         super().__init__(**kwargs)
         self.user = django_user.user
         self.to = django_user.email
+        self.ctx = {'user': self.user,
+                    'verification_link': self.user.verification_link,
+                    'faq_link': utils.construct_link(settings.PROTOCOL, settings.HOSTNAME, reverse('faq'))}
 
     def send(self, test=False):
 
@@ -48,10 +54,7 @@ class NoReply(PMMail):
         with their change address link to verify they are indeed the owner of the email.
         """
         self.subject = "Confirm your Email Congress account."
-        self.html_body = render_to_string('emails/html_body/signup_confirm.html',
-                                          context={'user': self.user,
-                                                   'verification_link': self.user.verification_link})
-
+        self.html_body = render_to_string('emails/html_body/signup_confirm.html', context=self.ctx)
         return self
 
     def address_change_request(self):
@@ -59,18 +62,14 @@ class NoReply(PMMail):
         User requests to change their address
         """
         self.subject = "You've requested to change your address information on Email Congress."
-        self.html_body = render_to_string("emails/html_body/address_change_request.html",
-                                          context={'user': self.user,
-                                                   'verification_link': self.user.verification_link})
+        self.html_body = render_to_string("emails/html_body/address_change_request.html", context=self.ctx)
         return self
 
     def remind_reps(self):
+        self.ctx['members_of_congress'] = self.user.members_of_congress
 
         self.subject = "Reminder of your members of Congress"
-        self.html_body = render_to_string('emails/html_body/remind_reps.html',
-                                          context={'user': self.user,
-                                                   'link': self.user.verification_link,
-                                                   'members_of_congress': self.user.members_of_congress})
+        self.html_body = render_to_string('emails/html_body/remind_reps.html', context=self.ctx)
         return self
 
     def email_confirm(self, msg):
@@ -80,10 +79,11 @@ class NoReply(PMMail):
         @param msg: the message object
         @type msg: emailcongress.models.Message
         """
+        self.ctx['verification_link'] = msg.verification_link
+        self.ctx['hide_address_update_link'] = True
+
         self.subject = 'Re: ' + msg.subject
-        self.html_body = render_to_string('emails/html_body/email_confirm.html',
-                                          context={'user': self.user,
-                                                   'verification_link': msg.verification_link})
+        self.html_body = render_to_string('emails/html_body/email_confirm.html', context=self.ctx)
         self._set_custom_headers_from_msg(msg)
         return self
 
@@ -93,47 +93,49 @@ class NoReply(PMMail):
         @param msg: the message object
         @type msg: emailcongress.models.Message
         """
-        self.subject = "You are successfully signed up for Email Congress!"
-        self.html_body = render_to_string('emails/signup_success.html',
-                                          context={'link': self.user.verification_link(),
-                                                   'user': self.user,
-                                                   'moc': self.user.default_info.members_of_congress})
+        self.ctx['members_of_congress'] = self.user.members_of_congress
+
+        self.subject = 'You are successfully signed up for Email Congress!'
+        self.html_body = render_to_string('emails/html_body/signup_success.html', context=self.ctx)
         self._set_custom_headers_from_msg(msg)
         return self
 
     def reconfirm_info(self, msg):
+        """
+
+        @param msg: the message object
+        @type msg: emailcongress.models.Message
+        @return:
+        @rtype:
+        """
 
         self.subject = "Complete your email to Congress"
-        self.html_body = render_to_string("emails/revalidate_user.html",
-                                          context={'verification_link': msg.verification_link(),
-                                                   'user': self.user})
+        self.html_body = render_to_string("emails/revalidate_user.html", context=self.ctx)
         self._set_custom_headers_from_msg(msg)
         return self
 
     def over_rate_limit(self, msg):
+        self.ctx['msg'] = msg
 
         self.subject = "You've sent too many emails recently."
-        self.html_body = render_to_string("emails/over_rate_limit.html",
-                                          context={'user': self.user,
-                                                   'msg': msg})
+        self.html_body = render_to_string("emails/over_rate_limit.html", context=self.ctx)
         self._set_custom_headers_from_msg(msg)
         return self
 
-    def message_queued(self, legs, msg):
+    def message_queued(self, msg):
+        self.ctx['legislators'] = msg.get_legislators()
 
         self.subject = "Your email is now on its way!"
-        self.html_body = render_to_string("emails/html_body/message_queued.html",
-                                          context={'legislators': [leg.full_title_and_full_name for leg in legs],
-                                                   'user': self.user})
+        self.html_body = render_to_string("emails/html_body/message_queued.html", context=self.ctx)
         self._set_custom_headers_from_msg(msg)
         return self
 
     def message_undeliverable(self, leg_buckets, msg):
 
+        self.ctx['leg_buckets'] = leg_buckets
+
         self.subject = "Your message to congress is unable to be delivered."
-        self.html_body = render_to_string("emails/message_undeliverable.html",
-                                          context={'leg_buckets': leg_buckets,
-                                                   'user': self.user})
+        self.html_body = render_to_string("emails/html_body/message_undeliverable.html", context=self.ctx)
         self._set_custom_headers_from_msg(msg)
         return self
 
@@ -180,17 +182,17 @@ class NoReply(PMMail):
         """
         send_statuses = {True: [], False: []}
         for ml in msg_legs:
-            send_statuses[ml.get_send_status()['status'] == 'success'].append(ml.legislator)
+            send_statuses[ml.sent].append(ml.legislator)
 
         if len(send_statuses[False]) > 0:
             subject = 'There were errors processing your recent message to congress.'
         else:
             subject = 'Your recent message to congress has successfully sent.'
 
+        self.ctx['statuses'] = send_statuses
+
         self.subject = subject
-        self.html_body = render_to_string("emails/send_status.html",
-                                          context={'legislators': send_statuses,
-                                                   'user': self.user})
+        self.html_body = render_to_string("emails/html_body/send_status.html", context=self.ctx)
         self._set_custom_headers_from_msg(msg)
         return self
 
@@ -208,30 +210,36 @@ class NoReply(PMMail):
         """
         Handles the case of notifying a user when they've changed their address information.
         """
+        self.ctx['members_of_congress'] = self.user.members_of_congress
 
         self.subject = 'Your Email Congress contact information has changed.'
-        self.html_body = render_to_string('emails/address_changed.html',
-                                          context={'link': self.user.verification_link(),
-                                                   'user': self.user,
-                                                   'moc': self.user.default_info.members_of_congress})
+        self.html_body = render_to_string('emails/html_body/address_changed.html', context=self.ctx)
         return self
 
-    def custom_email(self, subject, html_template, text_template, context):
+    def custom_email(self, subject, html_template, text_template, context, custom_headers=None):
         """
+        Create a custom email that doesn't exist in the predefined emails above.
 
-        @param subject:
-        @type subject:
-        @param html_template:
-        @type html_template:
-        @param text_template:
-        @type text_template:
-        @param context:
-        @type context:
-        @return:
-        @rtype:
+        @param subject: the subject of the email
+        @type subject: str
+        @param html_template: path/to/template to use for html body
+        @type html_template: str
+        @param text_template: path/to/template to use for plain text body
+        @type text_template: str
+        @param context: dictionary of values to supply to template
+        @type context: dict
+        @param custom_headers: custom headers to attach to this email
+        @type custom_headers: dict
+        @return: postmark email object
+        @rtype: PMMail
         """
+        self.ctx.update(context)
+
         self.subject = subject
-        self.html_body = render_to_string(html_template, context=context)
-        self.text_body = render_to_string(text_template, context=context)
+        self.html_body = render_to_string(html_template, context=self.ctx)
+        self.text_body = render_to_string(text_template, context=self.ctx)
+
+        if custom_headers is not None:
+            self._set_custom_headers(custom_headers)
 
         return self

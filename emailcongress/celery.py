@@ -32,13 +32,12 @@ def send_to_phantom_of_the_capitol(self, msg_id=None, msgleg_id=None, force=Fals
         try:
             from emailcongress.models import Message, MessageLegislator
             if msgleg_id is not None:
-                msgleg = MessageLegislator.objects.filter(id=msgleg_id).first()
-                msgleg.send()
+                MessageLegislator.objects.get(id=msgleg_id).send()
             elif msg_id is not None:
                 msg = Message.objects.get(pk=msg_id)
                 msg.send()
                 if msg.get_send_status() == 'sent' or self.request.retries >= self.max_retries:
-                    emailer.NoReply(msg.user_message_info.user).send_status(msg.to_legislators, msg).send()
+                    emailer.NoReply(msg.user_message_info.user.django_user).send_status(msg.to_legislators, msg).send()
                 else:
                     raise self.retry(exc=Exception)
         except:

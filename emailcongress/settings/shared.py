@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 
 import os
 import dj_database_url
+import raven
+import logging
 from etc import CONFIG_DICT
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -42,6 +44,7 @@ INSTALLED_APPS = [
     'widget_tweaks',
     'storages',
     'rest_framework',
+    'raven.contrib.django.raven_compat',
 
     # ours
     'emailcongress',
@@ -93,6 +96,8 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
+MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
+
 WSGI_APPLICATION = 'emailcongress.wsgi.application'
 
 # Database
@@ -135,6 +140,10 @@ USE_TZ = True
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'root': {
+        'level': 'WARNING',
+        'handlers': ['sentry'],
+    },
     'formatters': {
         'verbose': {
             'format': '[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s'
@@ -144,19 +153,34 @@ LOGGING = {
         }
     },
     'handlers': {
+        'sentry': {
+            'level': 'ERROR',
+            'class': 'raven.contrib.django.handlers.SentryHandler',
+            'formatter': 'verbose'
+        },
         'file': {
             'level': 'ERROR',
             'class': 'logging.FileHandler',
             'filename': os.getenv('ERROR_LOG_FILE', os.path.join(BASE_DIR, 'local.log')),
             'formatter': 'verbose'
         },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
+        }
     },
     'loggers': {
         'django': {
-            'handlers': ['file'],
             'level': 'ERROR',
+            'handlers': ['file'],
             'propagate': False
-        }
+        },
+        'raven': {
+            'level': 'ERROR',
+            'handlers': ['sentry'],
+            'propagate': False,
+        },
     }
 }
 
@@ -202,6 +226,11 @@ POSTMARK_DEBUG_EMAILS = CONFIG_DICT['email']['approved_debug_emails']
 
 DAYS_TOS_VALID = CONFIG_DICT['misc']['tos_days_valid']
 
+RAVEN_CONFIG = {
+    'dsn': CONFIG_DICT['raven']['dsn'],
+    'release': raven.fetch_git_sha(BASE_DIR),
+    'CELERY_LOGLEVEL': logging.ERROR,
+}
 
 if DEBUG:
     try:

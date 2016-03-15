@@ -10,7 +10,8 @@ https://docs.djangoproject.com/en/1.9/howto/deployment/wsgi/
 import os
 from etc import CONFIG_DICT
 from django.core.wsgi import get_wsgi_application
+from raven.contrib.django.raven_compat.middleware.wsgi import Sentry
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "emailcongress.settings.%s" % CONFIG_DICT['django']['environment'])
 
-application = get_wsgi_application()
+application = Sentry(get_wsgi_application())

@@ -1,17 +1,22 @@
 <section class="repcards-section">{% load emailcongress_filters %}
     {% for leg in user.members_of_congress %}
-    <div class="{% if not msg %}repcard--horizontal{% endif %} repcard {% if in_original_to %}is-selected{% endif %}">
-        <div class="repcard__photo" style="background-image: url({{ leg.image_url }});{% if not msg %}-webkit-filter: grayscale(0);filter: grayscale(0);{% endif %}"></div>
+    {% if legs_buckets and leg in legs_buckets.contactable %}
+        {% set_var in_original_to = True %}
+    {% else %}
+        {% set_var in_original_to = False %}
+    {% endif %}
+    <div class="{% if not form %}repcard--horizontal{% endif %} repcard {% if in_original_to %}is-selected{% endif %}">
+        <div class="repcard__photo" style="background-image: url({{ leg.image_url }});{% if not form %}-webkit-filter: grayscale(0);filter: grayscale(0);{% endif %}"></div>
         <div class="repcard__info">
             <span>{{ leg.full_title }}</span>
             <span>{{ leg.full_name }}</span>
-            {% if not msg %}
+            {% if not form %}
             <p><a href="mailto:{{ leg.email }}">{{ leg.email }}</a></p>
             {% endif %}
         </div>
-        {% if msg %}
+        {% if form %}
         <div class="repcard__action">
-            <input type="checkbox" class="repcard__checkbox" name="legislator_choices[]" value="{{ loop.index0 }}" {% if in_original_to %}checked{% endif %}>
+            <input type="checkbox" class="repcard__checkbox" name="legislator_choices" value="{{ forloop.counter0 }}" {% if in_original_to %}checked{% endif %}>
             <div class="repcard__checkbox--add">{% include 'icon_plus.svg' %}</div>
             <div class="repcard__checkbox--check">{% include 'icon_check.svg' %}</div>
         </div>

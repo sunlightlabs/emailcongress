@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from emailcongress.models import User, UserMessageInfo, Token, Legislator, MessageLegislator, UserMessageInfo, Message
+from emailcongress.models import User, UserMessageInfo, Token, Legislator, MessageLegislator, Message
 from django.contrib.auth.models import User as DjangoUser
 import abc
 
@@ -35,7 +35,7 @@ class MessageAdmin(AbstractAdmin):
 
 class UserMessageInfoAdmin(AbstractAdmin):
 
-    list_display = ('id', 'user', 'prefix', 'first_name', 'last_name', 'zip5', 'state', 'district')
+    list_display = ('user', 'default', 'prefix', 'first_name', 'last_name', 'zip5', 'state', 'district', 'accept_tos')
 
 
 class MessageLegislatorAdmin(admin.ModelAdmin):

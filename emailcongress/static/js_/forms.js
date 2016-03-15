@@ -3,7 +3,7 @@
         try {
             $(".button__primary[type='submit']").click(function(event) {
                 var checked = false;
-                $('input[type="checkbox"]').each(function(index, value) {
+                $('.repcard__checkbox').each(function(index, value) {
                     if ($(value).prop('checked')) {
                         checked = true;
                     }
@@ -21,17 +21,16 @@
             function checkSubmitButton()
             {
                 var checked = false;
-                $('input[type="checkbox"]').each(function(index, value) {
+                $('.repcard__checkbox').each(function(index, value) {
                     if ($(value).prop('checked')) {
                         checked = true;
                     }
                 });
-
                 if (!checked) {
-                    $("button[value='send']").addClass('is-disabled');
+                    $(".button__primary[type='submit']").addClass('is-disabled');
                 }
                 else {
-                    $("button[value='send']").removeClass('is-disabled');
+                    $(".button__primary[type='submit']").removeClass('is-disabled');
                 }
             }
 

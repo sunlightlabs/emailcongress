@@ -1,39 +1,55 @@
-{% extends 'www/base.html' %}
+{% extends 'www/base.html' %}{% load emailcongress_filters %}
 
 {% block title %}
     {% spaceless %}
+    {{ block.super }} -
     {% if msg %}
-    TODO
+    Your message is on its way!
     {% elif umi %}
-    Email Congress - Great you're signed up!
+    Great you're signed up!
     {% else %}
-    Email Congress - Check your email inbox
+    Check your email inbox
     {% endif %}
     {% endspaceless %}
 {% endblock %}
 
 {% block content %}
-
-    {% if msg %}
-    TODO
-    {% elif umi %}
+    {% if user %}
     <section class="section">
+        {% if msg %}
+        {% include 'icon_check.svg' %}
+        <h2 class="section__heading">Message sent!</h2>
+        <p class="section__description">
+            Your email is now on its way to {{ msg.legislators|humanize_legislator_list }}.
+        </p>
+        {% elif address_updated %}
+        {% include 'icon_check.svg' %}
+        <h2 class="section__heading">Great, we updated your information!</h2>
+        <p class="section__description">
+            You may now continue to message your representatives in Congress via email.
+        </p>
+        {% elif email_verify %}
         {% include 'icon_check.svg' %}
         <h2 class="section__heading">Great, you're signed up!</h2>
         <p class="section__description">
             You may now message your representatives in Congress via email.
         </p>
+        {% else %}
+        {% include 'icon_user.svg' %}
+        <h2 class="section__heading">Great, your account is active!</h2>
+        <p class="section__description">
+            You are able to message your representatives in Congress via email.
+        </p>
+        {% endif %}
     </section>
     <section class="content">
         <div class="faq__div--main">
-            <h3 class="content__header"><strong>What's next?</strong> You can use
-                <a href="mailto:myreps@emailcongress.us">myreps@emailcongress.us</a> to write to all of your representatives
-                at once. Or send individual emails:
+            <h3 class="content__header">
+                <strong>What's next?</strong> You can use <a href="mailto:myreps@emailcongress.us">myreps@emailcongress.us</a>
+                to write to all of your representatives at once. Or send individual emails:
             </h3>
-
             {% include 'www/partials/your_reps.html' with user=user %}
-
-            <h3 class="content__header"><strong>Tips for emailing Congress</strong></h3>
+            <h3 class="content__header"><strong>Tips for emailing Congress {% if msg %}next time{% endif %}</strong></h3>
             <hr>
             {% include 'www/partials/faq_tips.html' %}
         </div>
@@ -47,5 +63,4 @@
         </p>
     </section>
     {% endif %}
-
 {% endblock %}

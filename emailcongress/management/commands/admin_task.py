@@ -7,10 +7,11 @@ import string
 import random
 import json
 
-
 from django.core.management.base import BaseCommand, CommandError
 from django.core import management
 from django.conf import settings
+
+from raven.contrib.django.raven_compat.models import client
 
 from emailcongress.models import *
 from emailcongress.utils import construct_link
@@ -110,9 +111,10 @@ def simulate_postmark_message(from_email, to_emails=None, messageid=None):
         print('Making request to {0}'.format(url))
         req = requests.post(url, data=json.dumps(params))
         print(req.text)
-        #print(req.json())
-        return req.json()
+        return req.text
     except:
+        client.captureException()
+
         print('Request to postmark inbound url failed')
 
 

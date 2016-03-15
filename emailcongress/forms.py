@@ -1,16 +1,41 @@
 import re
-import datetime
 
-from django.forms import Form, ValidationError, ModelForm, TextInput, CharField, ChoiceField, EmailField, EmailInput
+from django.forms import Form, ValidationError, ModelForm, TextInput, \
+                         CharField, ChoiceField, EmailField, EmailInput, MultipleChoiceField, CheckboxSelectMultiple
 from django.template.loader import render_to_string
 from django.core import validators
-from django.forms.widgets import ChoiceInput
-from django.forms.utils import ErrorList
 from django.db import transaction
 
-from emailcongress.models import UserMessageInfo, DjangoUser, User
+from emailcongress.models import UserMessageInfo, DjangoUser, User, Message
+from emailcongress import emailer
 
-from django import forms
+
+class MessageForm(ModelForm):
+
+    class Meta:
+        model = Message
+        fields = []
+
+    legislator_choices = MultipleChoiceField(
+        widget=CheckboxSelectMultiple,
+    )
+
+    def __init__(self, legs_buckets=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.legs_buckets = legs_buckets
+        self.possible_legislators = list(self.instance.user_message_info.members_of_congress)
+        self['legislator_choices'].field.choices = [(i, str(i)) for i in range(0, len(self.possible_legislators))]
+
+    def __str__(self):
+        return render_to_string('www/forms/message_form.html', context={'form': self})
+
+    def complete(self):
+        self._assign_legislators()
+        self.instance.user_message_info.confirm_accept_tos()
+
+    def _assign_legislators(self):
+        legs = [self.possible_legislators[int(i)] for i in self.cleaned_data['legislator_choices']]
+        self.instance.set_legislators(legs)
 
 
 class EmailForm(Form):
@@ -29,8 +54,26 @@ class EmailForm(Form):
     def __str__(self):
         return render_to_string('www/forms/email_form.html', context={'form': self})
 
+    def process(self):
+
+        django_user = DjangoUser.objects.filter(email=self.cleaned_data['email']).first()
+        if django_user:
+            if self.cleaned_data['submit_type'] == 'update_address':
+                django_user.user.token.get().reset()
+                emailer.NoReply(django_user).address_change_request().send()
+            elif self.cleaned_data['submit_type'] == 'remind_reps':
+                emailer.NoReply(django_user).remind_reps().send()
+            return 'Check your inbox! We just sent an email to ' + self.cleaned_data['email'] + '.'
+        else:
+            return "The email you've entered doesn't exist in our system. Have you signed up?"
+
 
 class UserMessageInfoForm(ModelForm):
+
+    class Meta:
+        model = UserMessageInfo
+        fields = ['prefix', 'first_name', 'last_name', 'street_address', 'street_address2',
+                  'city', 'state', 'phone_number', 'email']
 
     name_error_message = 'Unfortunately, many congressional forms only acccept English ' \
                          'alphabet names without spaces. Please enter a name using only ' \
@@ -112,11 +155,6 @@ class UserMessageInfoForm(ModelForm):
                   error_messages={'invalid': 'Please enter a valid email address.'}
                   )
 
-    class Meta:
-        model = UserMessageInfo
-        fields = ['prefix', 'first_name', 'last_name', 'street_address', 'street_address2',
-                  'city', 'state', 'phone_number', 'email']
-
     def __str__(self):
         return render_to_string('www/forms/address_form.html', context={'form': self})
 
@@ -135,7 +173,7 @@ class UserMessageInfoForm(ModelForm):
     def clean_email(self):
         email = self.cleaned_data.get('email')
         try:
-            if DjangoUser.objects.get(email=email).user.default_info.accept_tos is not None:
+            if DjangoUser.objects.get(email=email).user.default_info.accept_tos and not self.instance.updating:
                 error_msg = "The email you entered already exists in our system. " \
                             "Click here if you wish to update your address information or be reminded " \
                             "of your members of congress."
@@ -184,6 +222,7 @@ class UserMessageInfoForm(ModelForm):
         user.usermessageinfo_set.update(default=False)
         self.instance.user = user
         self.instance.default = True
+        if hasattr(self.instance, 'updating'):
+            user.token.get().reset()
         super().save(commit=commit)
         return user.django_user
-

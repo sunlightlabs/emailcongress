@@ -1,0 +1,64 @@
+{% extends 'www/base.html' %}{% load emailcongress_filters %}
+
+{% block title %}
+    {% spaceless %}
+    {{ block.super }} - Confirm your reps
+    {% endspaceless %}
+{% endblock %}
+
+{% block content %}
+    <section class="section">
+        {% include 'icon_check.svg' %}
+        <h2 class="section__heading">Great, you're signed up! Now review before you send.</h2>
+        <p class="section__description">
+            For your first time, please review your message and message recipients below before we send it off.
+        </p>
+    </section>
+    <section class="content">
+        <div class="faq__div--main">
+            <h3 class="content__header">
+                <strong>Choose the Members of Congress</strong> from {{ umi.humanized_state }} and the {{ umi.humanized_district_no_state }} that you want to send your email to.
+            </h3>
+            {% if legs_buckets and legs_buckets.does_not_represent %}
+            <p class="form__error--clickable form__tip" href="#" data-toggle="modal" data-target="#modal">
+                Why {% if legs_buckets.does_not_represent|length > 1 %}aren't{% else %}isn't{% endif %} {{ legs_buckets.does_not_represent|humanize_legislator_list }} listed here?
+            </p>
+            {% endif %}
+            {% if legs_buckets and legs_buckets.non_existent %}
+            <p class="form__error--clickable" href="#" data-toggle="modal" data-target="#modal">
+                Our system could not recognize the email addresses for {{ legs_buckets.non_existent|humanize_list }}.
+            </p>
+            {% endif %}
+            <form id="message-form" class="form" method="POST" action="">
+                {% csrf_token %}
+                {{ form }}
+            </form>
+        </div>
+        <!-- Modal -->
+        <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+            <div class="modal-u-vcenter">
+                <div class="modal-dialog" role="document">
+                    <div class="modal__content">
+                        <div class="modal__body">
+                            {% include 'icon_question.svg' %}
+                            <h3 class="content__header"><strong>You can only email your own representatives</strong></h3>
+                            <p>Due to restrictions imposed on us by Congress, you can only send a message through this system to the members of Congress who represent the address that you provided us.</p>
+                            <p>
+                                Our system has determined that your provided address resides in the <strong>{{ umi.humanized_district }}</strong>. If you believe that this is incorrect
+                                then please verify your representative <a href="http://www.house.gov/representatives/find/" target="_blank">here</a> and
+                                <a href="mailto:emailcongress@sunlightfoundation.com">let us know that there may be a mistake</a>.
+                            </p>
+                            <p>
+                                If you wish to contact a member outside your state and/or district then the best way is to ask
+                                the members who represent you to forward your message to other members you’d like to contact.
+                            </p>
+                        </div>
+                        <div class="modal__footer">
+                            <button type="button" class="button__secondary" data-dismiss="modal">Got it, close this.</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
