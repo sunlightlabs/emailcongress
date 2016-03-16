@@ -205,7 +205,7 @@
         }
 
         @include breakpoint($screen-sm){
-            background: lighten($gray-lighter, 3%) url("..images/arrow_drop_down.svg") no-repeat 98% 70%;
+            background: lighten($gray-lighter, 3%) url("../images/arrow_drop_down.svg") no-repeat 98% 70%;
         }/
 
         @include breakpoint(768px){
