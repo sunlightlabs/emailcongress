@@ -192,7 +192,7 @@
         
         // custom appearance
         background: lighten($gray-lighter, 3%) url("../images/arrow_drop_down.svg") no-repeat 90% 70%;
-        box-shadow: 0px 1px 0px $gray-light;/
+        box-shadow: 0px 1px 0px $gray-light;
         color: $gray-dark;
         font-size: $beta;
         margin-bottom: 24px;
@@ -206,7 +206,7 @@
 
         @include breakpoint($screen-sm){
             background: lighten($gray-lighter, 3%) url("../images/arrow_drop_down.svg") no-repeat 98% 70%;
-        }/
+        }
 
         @include breakpoint(768px){
             margin-bottom: 0;
