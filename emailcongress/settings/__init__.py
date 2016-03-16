@@ -14,7 +14,7 @@ from storages.backends.s3boto import S3BotoStorage
 STATIC_LOCATION = os.path.join(settings.BASE_DIR, 'staticfiles')
 
 
-class MyS3BotoStorage(ManifestFilesMixin, S3BotoStorage):
+class MyS3BotoStorage(S3BotoStorage):
 
     pass
 

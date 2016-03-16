@@ -15,6 +15,7 @@
         - libpq-dev
         - curl
         - ruby-full
+      when: standalone
     - role: common-roles/redis-server
       bind_external: true
     - role: common-roles/django-celery
