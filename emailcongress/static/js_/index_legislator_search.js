@@ -42,7 +42,6 @@
         if (query != '')
         {
             var $query = $(query);
-            console.log($query);
             $query.each(function(index, ele){
                 $(ele).detach().appendTo($('#filtered'));
             });

@@ -1,4 +1,16 @@
 ---
+project: "emailcongress"
+hostname: "10.73.98.100"
+protocol: "http"
+django:
+  secret-key: "please-change-me"
+  environment: 'local'
+  database_uri: "postgres://username:password@dbhost:dbport/dbname"
+  allowed_hosts: []
+misc:
+  tos_days_valid: 180
+raven:
+  dsn: ""
 api_keys:
   sunlight: ""
   phantom_debug: ""
@@ -6,29 +18,29 @@ api_keys:
   texas_am_api_version: "4.01"
   postmark: ""
 api_endpoints:
-  phantom_base: ""
-  congress_base: ""
+  phantom_base: "http://10.73.98.103:3000"
+  congress_base: "http://congress.api.sunlightfoundation.com"
 paths:
   legislator_data_cache: "data/cached_legislators.json"
-misc:
-  tos_days_valid: 180
-  domain: "yourdomain.com"
-  submit_messages: False
 email:
-  no_reply: "noreply@yourdomain.com"
+  submit_to_webform: True
+  domain: "emailcongress.us"
+  no_reply: "courier@emailcongress.us"
   catch_all: "myreps"
   interval_hour_max: 1
   max_per_interval: 1000
+  approved_debug_emails: []
 celery:
-  celery_result_backend: ""
-  broker_url: ""
+  celery_result_backend: "redis://10.73.98.103:6379"
+  broker_url: "redis://10.73.98.103:6379"
   celery_accept_content: ['json']
   celery_message_compression: 'gzip'
   celery_task_serializer: 'json'
   celery_result_serializer: 'json'
   retry_delay: 3600 # seconds
-  max_retries: 3
+  max_retries: 0
 aws:
-  access_key_id: ''
-  secret_access_key: ''
-  storage_bucket_name: ''
+  access_key_id: ""
+  secret_access_key: ""
+  storage_bucket_name: ""
+  cloudfront_url: ""

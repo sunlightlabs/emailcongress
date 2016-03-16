@@ -128,10 +128,6 @@ USE_TZ = True
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    'root': {
-        'level': 'WARNING',
-        'handlers': ['sentry'],
-    },
     'formatters': {
         'verbose': {
             'format': '[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s'
@@ -141,11 +137,6 @@ LOGGING = {
         }
     },
     'handlers': {
-        'sentry': {
-            'level': 'ERROR',
-            'class': 'raven.contrib.django.handlers.SentryHandler',
-            'formatter': 'verbose'
-        },
         'file': {
             'level': 'ERROR',
             'class': 'logging.FileHandler',
@@ -212,8 +203,27 @@ POSTMARK_DEBUG_EMAILS = CONFIG_DICT['email']['approved_debug_emails']
 
 DAYS_TOS_VALID = CONFIG_DICT['misc']['tos_days_valid']
 
-RAVEN_CONFIG = {
-    'dsn': CONFIG_DICT['raven']['dsn'],
-    'release': raven.fetch_git_sha(BASE_DIR),
-    'CELERY_LOGLEVEL': logging.ERROR,
-}
+if CONFIG_DICT['raven']['dsn']:
+
+    RAVEN_CONFIG = {
+        'dsn': CONFIG_DICT['raven']['dsn'],
+        'release': raven.fetch_git_sha(BASE_DIR),
+        'CELERY_LOGLEVEL': logging.ERROR,
+    }
+
+    LOGGING['handlers']['sentry'] = {
+        'level': 'ERROR',
+        'class': 'raven.contrib.django.handlers.SentryHandler',
+        'formatter': 'verbose'
+    }
+
+    LOGGING['root'] = {
+        'level': 'WARNING',
+        'handlers': ['sentry']
+    }
+
+    LOGGING['loggers']['raven'] = {
+        'level': 'ERROR',
+        'handlers': ['sentry'],
+        'propagate': False,
+    }

@@ -38,9 +38,6 @@
                     $email_form_message.text(result['email']);
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
-                    console.log(textStatus);
-                    console.log(errorThrown);
-                    console.log(jqXHR);
                     $email_form_message.text(jqXHR['responseJSON']['email']);
                 },
                 complete: function (jqXHR, textStatus) {

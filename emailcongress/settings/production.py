@@ -1,5 +1,7 @@
 from emailcongress.settings.shared import *
 
+ALLOWED_HOSTS += CONFIG_DICT['django']['allowed_hosts']
+
 # see http://developer.yahoo.com/performance/rules.html#expires
 AWS_HEADERS = {
     'Expires': 'Thu, 31 Dec 2099 20:00:00 GMT',
