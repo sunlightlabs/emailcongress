@@ -1,8 +1,10 @@
 {% extends 'emails/base.html' %}{% load emailcongress_filters %}
 
 {% block preview_text %}
-    {% if statuses.True %}
+    {% if statuses.sent %}
         Message successfully submitted!
+    {% elif statuses.sent and statuses.unsent %}
+        Unable to send your message to some of your Members of Congress
     {% else %}
         Unable to send your message.
     {% endif %}
@@ -10,23 +12,23 @@
 
 {% block content %}
 
-    {% if statuses.True %}
+    {% if statuses.sent %}
     <tr>
         <td class="panel-border" style="background: #fefae7; border-collapse: collapse !important; border-style: solid none none; border-top-color: #FFF3BE !important; border-top-width: 2px !important; color: #333333; font-family: 'Source Sans Pro', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif; font-size: 14px; font-weight: normal; line-height: 19px; margin: 0; padding: 20px 30px; text-align: left; vertical-align: top" align="left" bgcolor="#fefae7" valign="top">
-            <h1 style="color: #333333; font-family: 'Source Sans Pro', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif; font-size: 20px; font-weight: bold; line-height: 28px; margin: 0; padding: 0; text-align: left; word-break: normal" align="left">Your message was successfully submitted to: {{ legislators|humanize_legislator_list }}</h1>
+            <h1 style="color: #333333; font-family: 'Source Sans Pro', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif; font-size: 20px; font-weight: bold; line-height: 28px; margin: 0; padding: 0; text-align: left; word-break: normal" align="left">Your message was successfully submitted to: {{ statuses.sent|humanize_legislator_list }}</h1>
         </td>
     </tr>
     {% endif %}
 
-    {% if statuses.False %}
+    {% if statuses.unsent %}
     <tr style="padding: 0; text-align: left; vertical-align: top" align="left">
         <td class="error-panel" style="background: #FBEDE9; border-collapse: collapse !important; border: none; color: #333333; font-family: 'Source Sans Pro', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif; font-size: 14px; font-weight: normal; line-height: 19px; margin: 0; padding: 20px 30px; text-align: left; vertical-align: top" align="left" bgcolor="#FBEDE9" valign="top">
-            <h1 style="color: #333333; font-family: 'Source Sans Pro', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif; font-size: 20px; font-weight: bold; line-height: 28px; margin: 0; padding: 0; text-align: left; word-break: normal" align="left">Your message was not able to be submitted to: {{ legislators|humanize_legislator_list }}</h1>
+            <h1 style="color: #333333; font-family: 'Source Sans Pro', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif; font-size: 20px; font-weight: bold; line-height: 28px; margin: 0; padding: 0; text-align: left; word-break: normal" align="left">Your message was not able to be submitted to: {{ statuses.unsent|humanize_legislator_list }}</h1>
             <p class="know-why" style="color: #333333; font-family: 'Source Sans Pro', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif; font-size: 14px; font-weight: normal; line-height: 19px; margin: 25px 0px 25px 25px; padding: 0; text-align: left" align="left">
                 <i>We were unsuccessful because there appears to be an issue with the congressional contact system. Sorry about that! Our technical team has been notified about the issue and for now you can send your message through their respective congressional webforms as followed:</i>
             </p>
             <ul>
-                {% for leg in statuses.False %}
+                {% for leg in statuses.unsent %}
                 <li><a href="{{ leg.contact_form }}">{{ leg.title_and_full_name }}</a></li>
                 {% endfor %}
             </ul>

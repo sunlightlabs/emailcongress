@@ -70,9 +70,9 @@ class MessageViewSet(viewsets.ModelViewSet):
             leg_buckets = models.Legislator.get_leg_buckets_from_emails(umi.members_of_congress, msg.to_originally)
             msg.set_legislators(leg_buckets['contactable'])
 
-            if msg.has_legislators() and msg.is_free_to_send():
+            if msg.has_legislators and msg.is_free_to_send():
                 msg.queue_to_send()
-                emailer.NoReply(django_user).message_queued(leg_buckets['contactable'], msg).send(test=test)
+                emailer.NoReply(django_user).message_queued(msg).send(test=test)
             elif not msg.is_free_to_send():
                 emailer.NoReply(django_user).over_rate_limit(msg).send(test=test)
             elif leg_buckets['does_not_represent'] or leg_buckets['non_existent']:

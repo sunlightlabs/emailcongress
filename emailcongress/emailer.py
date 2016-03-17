@@ -179,11 +179,11 @@ class NoReply(PMMail):
         @return: a python representation of a postmark object
         @rtype: PMMail
         """
-        send_statuses = {True: [], False: []}
+        send_statuses = {'sent': [], 'unsent': []}
         for ml in msg_legs:
-            send_statuses[ml.sent].append(ml.legislator)
+            send_statuses['sent' if ml.sent else 'unsent'].append(ml.legislator)
 
-        if len(send_statuses[False]) > 0:
+        if len(send_statuses['unsent']) > 0:
             subject = 'There were errors processing your recent message to congress.'
         else:
             subject = 'Your recent message to congress has successfully sent.'
