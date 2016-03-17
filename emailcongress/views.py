@@ -222,6 +222,7 @@ class CompleteView(ConvertTokenMixin, TemplateView):
             if self.umi.accept_tos is None:
                 self.umi.accept_tos = timezone.now()
                 self.umi.save()
+                emailer.NoReply(self.user.django_user).signup_success().send()
         return super().get(request, *args, **kwargs)
 
 

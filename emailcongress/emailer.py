@@ -87,7 +87,7 @@ class NoReply(PMMail):
         self._set_custom_headers_from_msg(msg)
         return self
 
-    def signup_success(self, msg):
+    def signup_success(self):
         """
 
         @param msg: the message object
@@ -97,7 +97,6 @@ class NoReply(PMMail):
 
         self.subject = 'You are successfully signed up for Email Congress!'
         self.html_body = render_to_string('emails/html_body/signup_success.html', context=self.ctx)
-        self._set_custom_headers_from_msg(msg)
         return self
 
     def reconfirm_info(self, msg):

@@ -22,10 +22,10 @@
       python_version: 3
       celerybeat_enabled: no
       git_repositories:
-        - repo: https://github.com/crdunwel/emailcongress.git
+        - repo: https://github.com/sunlightlabs/emailcongress.git
           dir: emailcongress
           version: HEAD
-    - role: rvm1-ansible
+    - role: rvm_io.rvm1-ruby
       rvm1_rubies:
         - 'ruby-2.2.0'
       rvm1_install_path: '/projects/{{project_name}}/rvm'
