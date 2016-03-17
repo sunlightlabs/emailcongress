@@ -183,7 +183,7 @@ class NoReply(PMMail):
         for ml in msg_legs:
             send_statuses['sent' if ml.sent else 'unsent'].append(ml.legislator)
 
-        if len(send_statuses['unsent']) > 0:
+        if send_statuses['unsent']:
             subject = 'There were errors processing your recent message to congress.'
         else:
             subject = 'Your recent message to congress has successfully sent.'
