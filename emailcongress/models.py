@@ -650,7 +650,7 @@ class MessageLegislator(EmailCongressModel):
     send_status = JSONField(max_length=8000, default={'status': 'unsent'})
     sent = models.NullBooleanField(default=None)
     message = models.ForeignKey(Message, on_delete=models.CASCADE)
-    legislator = models.ForeignKey(Legislator)
+    legislator = models.ForeignKey(Legislator, null=True)
 
     def __str__(self):
         return "{0} -> {1}".format(self.message, self.legislator)

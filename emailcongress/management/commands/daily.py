@@ -69,13 +69,13 @@ class Command(BaseCommand):
     }
 
     def add_arguments(self, parser):
-        parser.add_argument('task', nargs=1, type=str)
+        parser.add_argument('task', type=str)
         parser.add_argument('--kwargs', type=lambda kv: kv.split("="), dest='kwargs', nargs='*', default=[])
 
     def handle(self, **options):
         try:
             if options.get('task'):
-                self.tasks.get(options.pop('task')[0])(**{item[0]: item[1] for item in options['kwargs']})
+                self.tasks.get(options.pop('task'))(**{item[0]: item[1] for item in options['kwargs']})
             else:
                 for name, method in self.tasks.items():
                     method()

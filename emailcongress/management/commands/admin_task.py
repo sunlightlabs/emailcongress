@@ -20,13 +20,13 @@ from emailcongress.utils import construct_link
 def reset_database(prompt=True):
     if prompt is True:
         decision = input("This will delete everything in the database. Are you sure you want to do this? [Y,n] ")
-        decision2 = input("Are you absolutely sure? This can not be undone... [Y,n] ")
+        decision2 = input("Are you absolutely sure? This can not be undone ... [Y,n] ") if decision == 'Y' else ''
     else:
         decision = decision2 = 'Y'
 
     if decision == 'Y' and decision2 == 'Y':
         try:
-            print('Dropping all tables and recreating them from scratch...')
+            print('Running database reset commands...')
             management.call_command('reset_db')
             management.call_command('migrate')
             import_data()
@@ -139,14 +139,13 @@ class Command(BaseCommand):
     }
 
     def add_arguments(self, parser):
-        parser.add_argument('task', nargs=1, type=str)
+        parser.add_argument('task', type=str)
         parser.add_argument('--kwargs', type=lambda kv: kv.split("="), dest='kwargs', nargs='*', default=[])
 
     def handle(self, **options):
         try:
-            task = options.pop('task')[0]
+            task = options.pop('task')
             print('Running {0}'.format(task))
-            kwargs = {item[0]: item[1] for item in options['kwargs']}
-            self.tasks.get(task)(**kwargs)
+            self.tasks.get(task)(**{item[0]: item[1] for item in options['kwargs']})
         except:
             raise CommandError("Must supply a valid admin task from " + str(self.tasks.keys()))

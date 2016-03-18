@@ -30,6 +30,7 @@
     - bundle exec rake db:migrate
     - bundle exec rake ar:create
     - bundle exec rake ar:schema:load
+    - rm -rf ./us_congress members/
     - ./phantom-dc datasource add --git-clone https://github.com/unitedstates/contact-congress.git us_congress ./us_congress members/
     - bundle exec rake phantom-dc:update_git
   notify:
