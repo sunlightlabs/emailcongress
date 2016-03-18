@@ -200,7 +200,7 @@ class ConfirmRepsView(ConvertTokenMixin, FormView):
         return ctx
 
     def form_valid(self, form):
-        form.complete()
+        form.complete_and_queue_message()
         emailer.NoReply(self.user.django_user).message_queued(form.instance).send()
         return super().form_valid(form)
 

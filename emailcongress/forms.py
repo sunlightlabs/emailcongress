@@ -29,9 +29,10 @@ class MessageForm(ModelForm):
     def __str__(self):
         return render_to_string('www/forms/message_form.html', context={'form': self})
 
-    def complete(self):
+    def complete_and_queue_message(self):
         self._assign_legislators()
         self.instance.user_message_info.confirm_accept_tos()
+        self.instance.queue_to_send()
 
     def _assign_legislators(self):
         legs = [self.possible_legislators[int(i)] for i in self.cleaned_data['legislator_choices']]
