@@ -10,7 +10,7 @@
         {% include 'icon_question.svg' %}
         <h2 class="section__heading">FAQ &amp; Help</h2>
         <p class="section__description">
-            Answers to common questions. If you can't find what you're looking for here, shoot us an <a href="mailto:labs-contact@sunlightfoundation.com">email</a>.
+            Answers to common questions. If you can't find what you're looking for here, shoot us an <a href="mailto:emailcongress@sunlightfoundation.com">email</a>.
         </p>
     </section>
 
@@ -29,20 +29,19 @@
         <div class="faq__group">
             <h3 class="faq__header" id="faq_what">What is this service?</h3>
             <p>
-                Members of Congress don’t have official emails for the public to use, but they do have forms. This service makes navigating their complex contact forms
-                as easy as emailing them. It allows you to contact them via email after you fill out your information just once.
+                Members of Congress don’t have official emails for the public to use, but they do have forms.
+                This service makes navigating their complex contact forms as easy as emailing them.
+                It allows you to contact them via email after you fill out your information just once.
             </p>
         </div>
 
         <div class="faq__group">
             <h3 class="faq__header" id="faq_how">How do I use this service?</h3>
             <p>
-                Get started simply by sending a message to your representatives to <a href="mailto:myreps@emailcongress.us">myreps@emailcongress.us</a>.
+                Head over to our <a href="{% url 'signup' %}">signup page</a> and follow the instructions there.
             </p>
             <p>
-                You'll get a confirmation email with a link to sign up.
-                Once you're signed up, we'll send off your first message to your representatives.
-                From then on, you'll be able to continue writing to them by email instead of going through their contact forms.
+                Once you've confirmed your account, you'll be able to email your members of congress. It's that easy!
             </p>
             
         </div>
@@ -81,11 +80,16 @@
             </p>
             <p>
                 Sometimes errors in the information from the message can cause issues, such as a lengthy message that
-                exceeds the limit on webforms, which is set individually be each congressional office.
+                exceeds the limit on webforms, which is set individually by each congressional office.
             </p>
             <p>
                 If the address you entered does not fall in the congressional district you're trying to send
                 your message to (or is not recognized by the congressional web form), it can result in an unsent message.
+            </p>
+            <p>
+                Lastly, we reserve the right to limit excessive use of our service. We want everybody to be able to
+                message their members of congress so if your message may not be sent if you are sending many in a short
+                period of time.
             </p>
         </div>
 
@@ -97,7 +101,7 @@
                 their representatives in Congress. We're not affiliated with government.
             </p>
             <p>
-                The open source code for this project is available on <a href="https://github.com/sunlightlabs/the-phantom-mask">GitHub</a>.
+                The open source code for this project is available on <a href="https://github.com/sunlightlabs/emailcongress">GitHub</a>.
             </p>
         </div>
 

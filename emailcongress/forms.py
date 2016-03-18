@@ -209,7 +209,7 @@ class UserMessageInfoForm(ModelForm):
             error_msg = 'Unable to determine your congressional district from your zip code ' \
                         'and/or address. Please check again that your address information is ' \
                         'correct and try again. If this problem persists then please ' \
-                        'contact us <a href="mailto:labs@sunlightfoundation.com">here</a>. '\
+                        'contact us <a href="mailto:emailcongress@sunlightfoundation.com">here</a>. '\
                         'You may also check to see if the government is able to determine ' \
                         'your congressional district ' \
                         '<a target="_blank" href="https://www.house.gov/representatives/find/">here</a>.'

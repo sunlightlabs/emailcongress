@@ -7,7 +7,7 @@
 {% block content %}
 
     <section class="section">
-    {% if msg %}
+    {% if msg or not user %}
         {% include 'machine.svg' %}
         <h2 class="section__heading">Let's get your message to Congress.</h2>
         <p class="section__description">
