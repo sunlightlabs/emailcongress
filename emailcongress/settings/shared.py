@@ -213,7 +213,7 @@ if CONFIG_DICT['raven']['dsn']:
 
     LOGGING['handlers']['sentry'] = {
         'level': 'ERROR',
-        'class': 'raven.contrib.django.handlers.SentryHandler',
+        'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',
         'formatter': 'verbose'
     }
 

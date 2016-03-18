@@ -3,6 +3,7 @@ from django.template.loader import render_to_string
 from django.core.urlresolvers import reverse
 
 from postmark import PMMail
+from raven.contrib.django.raven_compat.models import client
 
 from emailcongress import utils
 
@@ -21,13 +22,16 @@ class NoReply(PMMail):
                     'faq_link': utils.construct_link(settings.PROTOCOL, settings.HOSTNAME, reverse('faq'))}
 
     def send(self, test=False):
+        try:
+            if not settings.DEBUG or (settings.DEBUG and self.to in settings.POSTMARK_DEBUG_EMAILS):
+                print('Sending live email to ' + self.to)
+                return super().send(test=test)
+            else:
+                print('Debug mode and/or {0} not in list of admin emails'.format(self.to))
+                return super().send(test=True)
+        except:
+            client.captureException()
 
-        if not settings.DEBUG or (settings.DEBUG and self.to in settings.POSTMARK_DEBUG_EMAILS):
-            print('Sending live email to ' + self.to)
-            return super().send(test=test)
-        else:
-            print('Debug mode and/or {0} not in list of admin emails'.format(self.to))
-            return super().send(test=True)
 
             # TODO robust error handling
 
@@ -53,6 +57,7 @@ class NoReply(PMMail):
         If user signs up through index page then they receive a confirmation email
         with their change address link to verify they are indeed the owner of the email.
         """
+        self.ctx['hide_address_update_link'] = True
         self.subject = "Confirm your Email Congress account."
         self.html_body = render_to_string('emails/html_body/signup_confirm.html', context=self.ctx)
         return self
