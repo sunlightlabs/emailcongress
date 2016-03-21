@@ -32,3 +32,4 @@ uwsgidecorators
 django-widget-tweaks
 raven
 pytz
+stopit

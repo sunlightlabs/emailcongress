@@ -218,11 +218,10 @@ class CompleteView(ConvertTokenMixin, TemplateView):
         return ctx
 
     def get(self, request, *args, **kwargs):
-        if self.umi:
-            if self.umi.accept_tos is None:
-                self.umi.accept_tos = timezone.now()
-                self.umi.save()
-                emailer.NoReply(self.user.django_user).signup_success().send()
+        if self.umi and self.umi.accept_tos is None:
+            self.umi.accept_tos = timezone.now()
+            self.umi.save()
+            emailer.NoReply(self.user.django_user).signup_success().send()
         return super().get(request, *args, **kwargs)
 
 

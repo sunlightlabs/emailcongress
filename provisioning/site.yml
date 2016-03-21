@@ -11,6 +11,7 @@
       extra_packages:
         - libpq-dev # Need this for psycopg2
         - memcached
+        - apache2-utils
     - role: common-roles/node
       npm_packages:
         - yuglify

@@ -10,3 +10,5 @@ staticfiles
 node_modules
 local.log
 __pycache__
+data/cached_legislators.json
+data/phantom_mask_database.json

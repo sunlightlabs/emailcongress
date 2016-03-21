@@ -1,4 +1,5 @@
 from urllib import parse
+from django.db.models import signals
 
 
 def bool_eval(v):

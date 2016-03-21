@@ -1,0 +1,45 @@
+upstream uwsgi_sock {
+    server unix:///projects/emailcongress/data/uwsgi.sock fail_timeout=0;
+}
+
+server {
+    listen 80;
+    sendfile off;
+
+    location /static/ {
+        gzip on;
+        gzip_vary on;
+        gzip_proxied any;
+        gzip_static on;
+        alias /projects/emailcongress/src/emailcongress/staticfiles/;
+    }
+
+    location /postmark/inbound {
+        add_header 'Access-Control-Allow-Origin' '*';
+        auth_basic "Restricted";
+        auth_basic_user_file /etc/nginx/.htpasswd;
+
+        proxy_read_timeout 300; # Some requests take more than 30 seconds.
+        proxy_connect_timeout 300; # Some requests take more than 30 seconds.
+
+        # proxy_pass_header Server;
+        proxy_redirect off;
+        # proxy_set_header   X-Scheme          $scheme;
+        # proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   Host              $http_host;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+
+        uwsgi_pass uwsgi_sock;
+    }
+
+    location / {
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Host $http_host;
+        proxy_redirect off;
+        include uwsgi_params;
+        uwsgi_pass uwsgi_sock;
+    }
+
+    access_log /projects/emailcongress/logs/access.log combined;
+    error_log /projects/emailcongress/logs/error.log;
+}

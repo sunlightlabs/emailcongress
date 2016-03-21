@@ -12,6 +12,17 @@
   environment: "{{django_environment}}"
   tags:
     - migrate
+
+# override default nginx template
+- name: write nginx template
+  template: src=nginx.j2 dest=/etc/nginx/sites-enabled/{{project_name}}
+  notify:
+    - restart nginx
+
+#  project setup code is handled by common-roles/django-base
+- name: ensure nginx is running and starts on boot
+  service: name=nginx state=restarted enabled=yes
+
 - name: collect static files
   become: yes
   become_user: emailcongress

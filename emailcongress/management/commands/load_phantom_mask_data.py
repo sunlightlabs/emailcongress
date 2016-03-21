@@ -1,12 +1,15 @@
-from django.core.management.base import BaseCommand, CommandError
-import json
-from django.conf import settings
 import os
-from emailcongress import models
+import json
 import traceback
-from django.utils import timezone
 from datetime import datetime
+from django.utils import timezone
+
+from django.core.management.base import BaseCommand, CommandError
+from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import signals
+
+from emailcongress import models
 
 
 class Command(BaseCommand):
@@ -22,6 +25,10 @@ class Command(BaseCommand):
             msgleg_dict = {}
             data = json.load(open(os.path.join(settings.BASE_DIR, options.get('datafile')), 'r'))
 
+            # we don't want to create tokens automatically on save because we're adding them at end
+            signals.post_save.disconnect(models.User.create_token_trigger, sender=models.User)
+            signals.post_save.disconnect(models.Message.create_token_trigger, sender=models.Message)
+
             for i in range(0, len(data['User'])):
                 _user = json.loads(data['User'][i])
                 django_user, c = models.DjangoUser.objects.get_or_create(username=_user['email'][0:30], email=_user['email'])
@@ -35,7 +42,6 @@ class Command(BaseCommand):
                     _umi_id = _umi.pop('id')
                     _umi['user'] = user_dict[_umi.pop('user_id')]
                 except:
-                    print(_umi)
                     continue
                 _at = timezone.make_aware(datetime.strptime(_umi['created_at'], "%Y-%m-%dT%H:%M:%S.%f"))
                 _umi.update({'created_at': _at, 'updated_at': _at})

@@ -181,7 +181,8 @@ class HasTokenMixin(object):
     @staticmethod
     def create_token_trigger(sender, instance, created, *args, **kwargs):
         if created:
-            Token.objects.create(content_object=instance)
+            ctype = ContentType.objects.get_for_model(instance)
+            Token.objects.get_or_create(content_type=ctype, object_id=instance.pk)
 
     @staticmethod
     def delete_related_token(sender, instance, **kwargs):
