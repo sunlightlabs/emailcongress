@@ -14,9 +14,9 @@ def determine_district(**kwargs):
     elif 'zip5' in kwargs:
         data = sunlight.congress.locate_districts_by_zip(kwargs.get('zip5'))
         if data is not None and len(data) > 1 and {'street_address', 'city', 'state'}.issubset(set(kwargs)):
-            lat, lng = geolocate(street_address=kwargs.get('street_address'),
+            lat, lng = geolocate(state=kwargs.get('state'),
+                                 street_address=kwargs.get('street_address'),
                                  city=kwargs.get('city'),
-                                 state=kwargs.get('state'),
                                  zip5=kwargs.get('zip5'))
             data = sunlight.congress.locate_districts_by_lat_lon(lat, lng)
     else:

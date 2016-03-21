@@ -2,15 +2,11 @@ from django.conf import settings
 from lib import geocoder
 
 
-def geolocate(state=False, **kwargs):
+def geolocate(**kwargs):
     try:
         geo = geocoder.Geocoder('TexasAm', {'apiKey': settings.CONFIG_DICT['api_keys']['texas_am']})
         geo.lookup(**kwargs)
-        lat, lng = geo.lat_long()
-        if state:
-            return geo.service.data['InputAddress']['State'], lat, lng
-        else:
-            return lat, lng
+        return geo.lat_long()
     except KeyError:
         raise
         # TODO robust error handling

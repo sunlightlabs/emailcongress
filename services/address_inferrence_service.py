@@ -1,5 +1,3 @@
-from threading import Thread
-from queue import Queue
 import stopit
 
 from lib.usps import USPSScraper
@@ -15,8 +13,8 @@ def address_lookup(**kwargs):
         if to_ctx_mgr.state == to_ctx_mgr.EXECUTED:
             return address
         else:
-            state, lat, lng = geolocate(state=True, **kwargs)
-            return reverse_geolocate(lat, lng, state=state)
+            lat, lng = geolocate(**kwargs)
+            return reverse_geolocate(lat, lng, state=kwargs.get('state', ''))
     except:
         return None
 
@@ -34,7 +32,7 @@ def zip4_lookup(street_address, city, state, zip5=''):
     # If USPS is unable to determine zip4 then use geolocation method
     try:
         lat, lng = geolocate(street_address=street_address, city=city, state=state, zip5=zip5)
-        return reverse_geolocate(lat, lng).zip4()
+        return reverse_geolocate(lat, lng, state=state).zip4()
     except:
         # Give up. User must enter in their zip4 manually. #TODO proper error handling
         return None
