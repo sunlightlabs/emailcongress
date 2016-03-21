@@ -22,7 +22,4 @@ def determine_district(**kwargs):
     else:
         raise KeyError('Must provide appropriate keyword arguments')
 
-    try:
-        return data[0]
-    except:
-        raise
+    return data

@@ -503,12 +503,12 @@ class UserMessageInfo(EmailCongressModel):
 
     def determine_district(self, save=False):
         data = determine_district_service.determine_district(zip5=self.zip5)
-        if data is None:
-            lat, lng = self.geolocate_address()
+        if data is None or len(data) > 1:
+            lat, lng = self.geolocate_address(save=True)
             data = determine_district_service.determine_district(latitude=lat, longitude=lng)
         try:
-            self.district = data.get('district')
-            self.state = data.get('state')
+            self.district = data[0].get('district')
+            self.state = data[0].get('state')
             if save:
                 self.save()
             return self.district
