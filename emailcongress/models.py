@@ -403,7 +403,7 @@ class User(EmailCongressModel, HasTokenMixin):
     def get_or_create_user_from_email(email):
         try:
             with transaction.atomic():
-                django_user, created = DjangoUser.objects.get_or_create(username=email, email=email)
+                django_user, created = DjangoUser.objects.get_or_create(username=email[0:30], email=email)
                 user, created = User.objects.get_or_create(django_user=django_user)
                 if user.default_info and user.default_info.accept_tos:
                     umi = user.default_info
