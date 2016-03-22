@@ -204,7 +204,7 @@ class UserMessageInfoForm(ModelForm):
         """
         super()._post_clean()
         try:
-            self.instance.determine_district()
+            self.instance.determine_district(force=True)
         except:
             error_msg = 'Unable to determine your congressional district from your zip code ' \
                         'and/or address. Please check again that your address information is ' \
@@ -218,7 +218,7 @@ class UserMessageInfoForm(ModelForm):
 
     @transaction.atomic
     def save(self, commit=True):
-        django_user, created = DjangoUser.objects.get_or_create(username=self.data['email'], email=self.data['email'])
+        django_user, created = DjangoUser.objects.get_or_create(username=self.data['email'][0:30], email=self.data['email'])
         user, created = User.objects.get_or_create(django_user=django_user)
         user.usermessageinfo_set.update(default=False)
         self.instance.user = user
