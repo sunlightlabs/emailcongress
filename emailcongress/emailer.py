@@ -122,7 +122,7 @@ class NoReply(PMMail):
         self.ctx['msg'] = msg
 
         self.subject = "You've sent too many emails recently."
-        self.html_body = render_to_string("emails/over_rate_limit.html", context=self.ctx)
+        self.html_body = render_to_string("emails/html_body/over_rate_limit.html", context=self.ctx)
         self._set_custom_headers_from_msg(msg)
         return self
 
@@ -199,16 +199,6 @@ class NoReply(PMMail):
         self.html_body = render_to_string("emails/html_body/send_status.html", context=self.ctx)
         self._set_custom_headers_from_msg(msg)
         return self
-
-    def successfully_reset_token(self):
-        """
-        Handles the case of notifying a user when they've changed their address information.
-
-        """
-
-        self.subject = 'Your Email Congress token has been successfully reset.'
-        self.html_body = render_to_string('emails/successfully_reset_token.html',
-                                          context={'user': self.user, 'link': self.user.token.link()})
 
     def address_changed(self):
         """
